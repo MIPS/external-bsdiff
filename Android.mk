@@ -25,16 +25,11 @@ bsdiff_common_cflags := \
 bsdiff_common_static_libs := \
     libbz
 
-bsdiff_common_unittests := \
-    bsdiff_unittest.cc \
-    extents_file_unittest.cc \
-    extents_unittest.cc \
-    test_utils.cc
-
 # "bsdiff" program.
-bsdiff_shared_libs := \
+bsdiff_static_libs := \
     libdivsufsort64 \
-    libdivsufsort
+    libdivsufsort \
+    $(bsdiff_common_static_libs)
 
 bsdiff_src_files := \
     bsdiff.cc
@@ -46,59 +41,96 @@ bspatch_src_files := \
     extents_file.cc \
     file.cc
 
+# Unit test files.
+bsdiff_common_unittests := \
+    bsdiff_unittest.cc \
+    extents_file_unittest.cc \
+    extents_unittest.cc \
+    test_utils.cc
+
+# Target static libraries.
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := libbspatch
+LOCAL_CPP_EXTENSION := .cc
+LOCAL_SRC_FILES := $(bspatch_src_files)
+LOCAL_CFLAGS := $(bsdiff_common_cflags)
+LOCAL_STATIC_LIBRARIES := $(bsdiff_common_static_libs)
+include $(BUILD_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := libbsdiff
+LOCAL_CPP_EXTENSION := .cc
+LOCAL_SRC_FILES := $(bsdiff_src_files)
+LOCAL_CFLAGS := $(bsdiff_common_cflags)
+LOCAL_STATIC_LIBRARIES := $(bsdiff_static_libs)
+include $(BUILD_STATIC_LIBRARY)
+
+# Host static libraries.
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := libbspatch
+LOCAL_CPP_EXTENSION := .cc
+LOCAL_SRC_FILES := $(bspatch_src_files)
+LOCAL_CFLAGS := $(bsdiff_common_cflags)
+LOCAL_STATIC_LIBRARIES := $(bsdiff_common_static_libs)
+include $(BUILD_HOST_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := libbsdiff
+LOCAL_CPP_EXTENSION := .cc
+LOCAL_SRC_FILES := $(bsdiff_src_files)
+LOCAL_CFLAGS := $(bsdiff_common_cflags)
+LOCAL_STATIC_LIBRARIES := $(bsdiff_static_libs)
+include $(BUILD_HOST_STATIC_LIBRARY)
+
 # Target executables.
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := bspatch
 LOCAL_CPP_EXTENSION := .cc
-LOCAL_SRC_FILES := \
-    $(bspatch_src_files) \
-    bspatch_main.cc
+LOCAL_SRC_FILES := bspatch_main.cc
 LOCAL_CFLAGS := $(bsdiff_common_cflags)
-LOCAL_C_INCLUDES += external/bzip2
-LOCAL_STATIC_LIBRARIES := $(bsdiff_common_static_libs)
+LOCAL_STATIC_LIBRARIES := \
+    libbspatch \
+    $(bsdiff_common_static_libs)
 include $(BUILD_EXECUTABLE)
-
 
 # Host executables.
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := bsdiff
 LOCAL_CPP_EXTENSION := .cc
-LOCAL_SRC_FILES := \
-    $(bsdiff_src_files) \
-    bsdiff_main.cc
+LOCAL_SRC_FILES := bsdiff_main.cc
 LOCAL_CFLAGS := $(bsdiff_common_cflags)
-LOCAL_C_INCLUDES += external/bzip2
-LOCAL_STATIC_LIBRARIES := $(bsdiff_common_static_libs)
-LOCAL_SHARED_LIBRARIES := $(bsdiff_shared_libs)
+LOCAL_STATIC_LIBRARIES := \
+    libbsdiff \
+    $(bsdiff_static_libs)
 include $(BUILD_HOST_EXECUTABLE)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := bspatch
 LOCAL_CPP_EXTENSION := .cc
-LOCAL_SRC_FILES := \
-    $(bspatch_src_files) \
-    bspatch_main.cc
+LOCAL_SRC_FILES := bspatch_main.cc
 LOCAL_CFLAGS := $(bsdiff_common_cflags)
-LOCAL_C_INCLUDES += external/bzip2
-LOCAL_STATIC_LIBRARIES := $(bsdiff_common_static_libs)
+LOCAL_STATIC_LIBRARIES := \
+    libbspatch \
+    $(bsdiff_common_static_libs)
 include $(BUILD_HOST_EXECUTABLE)
+
+# Unit tests.
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := bsdiff_unittest
 LOCAL_MODULE_TAGS := debug tests
 LOCAL_CPP_EXTENSION := .cc
-LOCAL_SRC_FILES := \
-    $(bsdiff_src_files) \
-    $(bspatch_src_files) \
-    $(bsdiff_common_unittests) \
+LOCAL_SRC_FILES := $(bsdiff_common_unittests) \
     testrunner.cc
-LOCAL_CFLAGS := $(bsdiff_common_cflags)
-LOCAL_C_INCLUDES += external/bzip2
+LOCAL_CFLAGS := $(bsdiff_common_cflags) \
+    -DBSDIFF_TARGET_UNITTEST
 LOCAL_STATIC_LIBRARIES := \
-    $(bsdiff_common_static_libs) \
-    libgtest_host \
-    libgmock_host
-LOCAL_SHARED_LIBRARIES := $(bsdiff_shared_libs)
-include $(BUILD_HOST_EXECUTABLE)
+    libbsdiff \
+    libbspatch \
+    libgmock \
+    $(bsdiff_static_libs)
+include $(BUILD_NATIVE_TEST)
