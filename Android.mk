@@ -39,11 +39,13 @@ bspatch_src_files := \
     bspatch.cc \
     extents.cc \
     extents_file.cc \
-    file.cc
+    file.cc \
+    memory_file.cc
 
 # Unit test files.
 bsdiff_common_unittests := \
     bsdiff_unittest.cc \
+    bspatch_unittest.cc \
     extents_file_unittest.cc \
     extents_unittest.cc \
     test_utils.cc
