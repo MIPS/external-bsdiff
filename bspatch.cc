@@ -112,7 +112,7 @@ bool WriteAll(const std::unique_ptr<FileInterface>& file,
               size_t size) {
   size_t offset = 0, written;
   while (offset < size) {
-    if (!file->Write(data + offset, size - offset, &written))
+    if (!file->Write(data + offset, size - offset, &written) || written == 0)
       return false;
     offset += written;
   }

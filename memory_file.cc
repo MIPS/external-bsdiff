@@ -35,6 +35,9 @@ bool MemoryFile::Seek(off_t pos) {
 bool MemoryFile::Close() {
   if (!WriteAll(file_, buffer_.data(), buffer_.size()))
     return false;
+  // Prevent writing |buffer_| to |file_| again if Close() is called more than
+  // once.
+  buffer_.clear();
   return file_->Close();
 }
 
