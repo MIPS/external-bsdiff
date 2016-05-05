@@ -65,6 +65,7 @@ LOCAL_MODULE := libbsdiff
 LOCAL_CPP_EXTENSION := .cc
 LOCAL_SRC_FILES := $(bsdiff_src_files)
 LOCAL_CFLAGS := $(bsdiff_common_cflags)
+LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_PATH)
 LOCAL_STATIC_LIBRARIES := $(bsdiff_static_libs)
 include $(BUILD_STATIC_LIBRARY)
 
@@ -83,6 +84,7 @@ LOCAL_MODULE := libbsdiff
 LOCAL_CPP_EXTENSION := .cc
 LOCAL_SRC_FILES := $(bsdiff_src_files)
 LOCAL_CFLAGS := $(bsdiff_common_cflags)
+LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_PATH)
 LOCAL_STATIC_LIBRARIES := $(bsdiff_static_libs)
 include $(BUILD_HOST_STATIC_LIBRARY)
 

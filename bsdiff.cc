@@ -28,6 +28,8 @@
 __FBSDID("$FreeBSD: src/usr.bin/bsdiff/bsdiff/bsdiff.c,v 1.1 2005/08/06 01:59:05 cperciva Exp $");
 #endif
 
+#include "bsdiff.h"
+
 #include <sys/types.h>
 
 #include <bzlib.h>
@@ -50,7 +52,7 @@ __FBSDID("$FreeBSD: src/usr.bin/bsdiff/bsdiff/bsdiff.c,v 1.1 2005/08/06 01:59:05
 
 namespace bsdiff {
 
-static off_t matchlen(u_char *old, off_t oldsize, u_char *new_buf,
+static off_t matchlen(const u_char* old, off_t oldsize, const u_char* new_buf,
                       off_t newsize) {
 	off_t i;
 
@@ -60,9 +62,9 @@ static off_t matchlen(u_char *old, off_t oldsize, u_char *new_buf,
 	return i;
 }
 
-static off_t search(saidx_t *I,u_char *old,off_t oldsize,
-		u_char *new_buf,off_t newsize,off_t st,off_t en,off_t *pos)
-{
+static off_t search(saidx_t* I, const u_char* old, off_t oldsize,
+                    const u_char* new_buf, off_t newsize, off_t st, off_t en,
+                    off_t* pos) {
 	off_t x,y;
 
 	if(en-st<2) {
@@ -109,6 +111,35 @@ int bsdiff(const char* old_filename, const char* new_filename,
 	int fd;
 	u_char *old_buf,*new_buf;
 	off_t oldsize,newsize;
+
+	/* Allocate oldsize+1 bytes instead of oldsize bytes to ensure
+		that we never try to malloc(0) and get a NULL pointer */
+	if(((fd=open(old_filename,O_RDONLY,0))<0) ||
+		((oldsize=lseek(fd,0,SEEK_END))==-1) ||
+		((old_buf=static_cast<u_char*>(malloc(oldsize+1)))==NULL) ||
+		(lseek(fd,0,SEEK_SET)!=0) ||
+		(read(fd,old_buf,oldsize)!=oldsize) ||
+		(close(fd)==-1)) err(1,"%s",old_filename);
+
+	/* Allocate newsize+1 bytes instead of newsize bytes to ensure
+		that we never try to malloc(0) and get a NULL pointer */
+	if(((fd=open(new_filename,O_RDONLY,0))<0) ||
+		((newsize=lseek(fd,0,SEEK_END))==-1) ||
+		((new_buf = static_cast<u_char*>(malloc(newsize+1)))==NULL) ||
+		(lseek(fd,0,SEEK_SET)!=0) ||
+		(read(fd,new_buf,newsize)!=newsize) ||
+		(close(fd)==-1)) err(1,"%s",new_filename);
+
+	int ret = bsdiff(old_buf, oldsize, new_buf, newsize, patch_filename);
+
+	free(old_buf);
+	free(new_buf);
+
+	return ret;
+}
+
+int bsdiff(const u_char* old_buf, off_t oldsize, const u_char* new_buf,
+           off_t newsize, const char* patch_filename) {
 	saidx_t *I;
 	off_t scan,pos=0,len;
 	off_t lastscan,lastpos,lastoffset;
@@ -124,28 +155,10 @@ int bsdiff(const char* old_filename, const char* new_filename,
 	BZFILE * pfbz2;
 	int bz2err;
 
-	/* Allocate oldsize+1 bytes instead of oldsize bytes to ensure
-		that we never try to malloc(0) and get a NULL pointer */
-	if(((fd=open(old_filename,O_RDONLY,0))<0) ||
-		((oldsize=lseek(fd,0,SEEK_END))==-1) ||
-		((old_buf=static_cast<u_char*>(malloc(oldsize+1)))==NULL) ||
-		(lseek(fd,0,SEEK_SET)!=0) ||
-		(read(fd,old_buf,oldsize)!=oldsize) ||
-		(close(fd)==-1)) err(1,"%s",old_filename);
-
 	if((I=static_cast<saidx_t*>(malloc((oldsize+1)*sizeof(saidx_t))))==NULL)
 		err(1,NULL);
 
 	if(divsufsort(old_buf, I, oldsize)) err(1, "divsufsort");
-
-	/* Allocate newsize+1 bytes instead of newsize bytes to ensure
-		that we never try to malloc(0) and get a NULL pointer */
-	if(((fd=open(new_filename,O_RDONLY,0))<0) ||
-		((newsize=lseek(fd,0,SEEK_END))==-1) ||
-		((new_buf = static_cast<u_char*>(malloc(newsize+1)))==NULL) ||
-		(lseek(fd,0,SEEK_SET)!=0) ||
-		(read(fd,new_buf,newsize)!=newsize) ||
-		(close(fd)==-1)) err(1,"%s",new_filename);
 
 	if(((db=static_cast<u_char*>(malloc(newsize+1)))==NULL) ||
 		((eb=static_cast<u_char*>(malloc(newsize+1)))==NULL)) err(1,NULL);
@@ -325,8 +338,6 @@ int bsdiff(const char* old_filename, const char* new_filename,
 	free(db);
 	free(eb);
 	free(I);
-	free(old_buf);
-	free(new_buf);
 
 	return 0;
 }
