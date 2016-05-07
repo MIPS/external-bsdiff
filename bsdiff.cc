@@ -62,6 +62,11 @@ static off_t matchlen(const u_char* old, off_t oldsize, const u_char* new_buf,
 	return i;
 }
 
+// This is a binary search of the string |new_buf| of size |newsize| (or a
+// prefix of it) in the |old| string with size |oldsize| using the suffix array
+// |I|. |st| and |en| is the start and end of the search range (inclusive).
+// Returns the length of the longest prefix found and stores the position of the
+// string found in |*pos|.
 static off_t search(saidx_t* I, const u_char* old, off_t oldsize,
                     const u_char* new_buf, off_t newsize, off_t st, off_t en,
                     off_t* pos) {
@@ -206,7 +211,7 @@ int bsdiff(const u_char* old_buf, off_t oldsize, const u_char* new_buf,
 			prev_pos=pos;
 
 			len=search(I,old_buf,oldsize,new_buf+scan,newsize-scan,
-					0,oldsize,&pos);
+					0,oldsize-1,&pos);
 
 			for(;scsc<scan+len;scsc++)
 			if((scsc+lastoffset<oldsize) &&
