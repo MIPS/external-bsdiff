@@ -110,8 +110,6 @@ LOCAL_CFLAGS := $(bsdiff_common_cflags)
 LOCAL_STATIC_LIBRARIES := \
     libbsdiff \
     $(bsdiff_static_libs)
-LOCAL_NO_FPIE := true
-LOCAL_LDFLAGS := -static
 include $(BUILD_HOST_EXECUTABLE)
 
 include $(CLEAR_VARS)
