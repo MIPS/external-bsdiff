@@ -42,14 +42,6 @@ __FBSDID("$FreeBSD: src/usr.bin/bsdiff/bsdiff/bsdiff.c,v 1.1 2005/08/06 01:59:05
 
 #include <algorithm>
 
-#if _FILE_OFFSET_BITS == 64
-#include "divsufsort64.h"
-#define saidx_t saidx64_t
-#define divsufsort divsufsort64
-#else
-#include "divsufsort.h"
-#endif
-
 namespace bsdiff {
 
 static off_t matchlen(const u_char* old, off_t oldsize, const u_char* new_buf,
@@ -135,7 +127,7 @@ int bsdiff(const char* old_filename, const char* new_filename,
 		(read(fd,new_buf,newsize)!=newsize) ||
 		(close(fd)==-1)) err(1,"%s",new_filename);
 
-	int ret = bsdiff(old_buf, oldsize, new_buf, newsize, patch_filename);
+	int ret = bsdiff(old_buf, oldsize, new_buf, newsize, patch_filename, nullptr);
 
 	free(old_buf);
 	free(new_buf);
@@ -143,8 +135,12 @@ int bsdiff(const char* old_filename, const char* new_filename,
 	return ret;
 }
 
+// Generate bsdiff patch from |old_buf| to |new_buf|, save the patch file to
+// |patch_filename|. Returns 0 on success.
+// |I_cache| can be used to cache the suffix array if the same |old_buf| is used
+// repeatedly, pass nullptr if not needed.
 int bsdiff(const u_char* old_buf, off_t oldsize, const u_char* new_buf,
-           off_t newsize, const char* patch_filename) {
+           off_t newsize, const char* patch_filename, saidx_t** I_cache) {
 	saidx_t *I;
 	off_t scan,pos=0,len;
 	off_t lastscan,lastpos,lastoffset;
@@ -160,10 +156,16 @@ int bsdiff(const u_char* old_buf, off_t oldsize, const u_char* new_buf,
 	BZFILE * pfbz2;
 	int bz2err;
 
-	if((I=static_cast<saidx_t*>(malloc((oldsize+1)*sizeof(saidx_t))))==NULL)
-		err(1,NULL);
+	if (I_cache && *I_cache) {
+		I = *I_cache;
+	} else {
+		if ((I=static_cast<saidx_t*>(malloc((oldsize+1)*sizeof(saidx_t))))==NULL)
+			err(1,NULL);
 
-	if(divsufsort(old_buf, I, oldsize)) err(1, "divsufsort");
+		if (divsufsort(old_buf, I, oldsize)) err(1, "divsufsort");
+		if (I_cache)
+			*I_cache = I;
+	}
 
 	if(((db=static_cast<u_char*>(malloc(newsize+1)))==NULL) ||
 		((eb=static_cast<u_char*>(malloc(newsize+1)))==NULL)) err(1,NULL);
@@ -342,7 +344,8 @@ int bsdiff(const u_char* old_buf, off_t oldsize, const u_char* new_buf,
 	/* Free the memory we used */
 	free(db);
 	free(eb);
-	free(I);
+	if (I_cache == nullptr)
+		free(I);
 
 	return 0;
 }
