@@ -31,7 +31,6 @@ __FBSDID("$FreeBSD: src/usr.bin/bsdiff/bspatch/bspatch.c,v 1.1 2005/08/06 01:59:
 #include "bspatch.h"
 
 #include <bzlib.h>
-#include <err.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
@@ -95,20 +94,24 @@ bool ReadBZ2(bz_stream* stream, uint8_t* data, size_t size) {
   return true;
 }
 
-bool ReadBZ2AndWriteAll(const std::unique_ptr<bsdiff::FileInterface>& file,
-                        bz_stream* stream,
-                        size_t size,
-                        uint8_t* buf,
-                        size_t buf_size) {
+int ReadBZ2AndWriteAll(const std::unique_ptr<bsdiff::FileInterface>& file,
+                       bz_stream* stream,
+                       size_t size,
+                       uint8_t* buf,
+                       size_t buf_size) {
   while (size > 0) {
     size_t bytes_to_read = std::min(size, buf_size);
-    if (!ReadBZ2(stream, buf, bytes_to_read))
-      return false;
-    if (!WriteAll(file, buf, bytes_to_read))
-      return false;
+    if (!ReadBZ2(stream, buf, bytes_to_read)) {
+      fprintf(stderr, "Failed to read bzip stream.\n");
+      return 2;
+    }
+    if (!WriteAll(file, buf, bytes_to_read)) {
+      perror("WriteAll() failed");
+      return 1;
+    }
     size -= bytes_to_read;
   }
-  return true;
+  return 0;
 }
 
 }  // namespace
@@ -147,10 +150,15 @@ bool IsOverlapping(const char* old_filename,
   if (stat(new_filename, &new_stat) == -1) {
     if (errno == ENOENT)
       return false;
-    err(1, "Error stat the new filename %s", new_filename);
+    fprintf(stderr, "Error stat the new file %s: %s\n", new_filename,
+            strerror(errno));
+    return true;
   }
-  if (stat(old_filename, &old_stat) == -1)
-    err(1, "Error stat the old filename %s", old_filename);
+  if (stat(old_filename, &old_stat) == -1) {
+    fprintf(stderr, "Error stat the old file %s: %s\n", old_filename,
+            strerror(errno));
+    return true;
+  }
 
   if (old_stat.st_dev != new_stat.st_dev || old_stat.st_ino != new_stat.st_ino)
     return false;
@@ -167,45 +175,66 @@ bool IsOverlapping(const char* old_filename,
   return false;
 }
 
-int bspatch(
-    const char* old_filename, const char* new_filename,
-    const char* patch_filename,
-    const char* old_extents, const char* new_extents) {
+// Patch |old_filename| with |patch_filename| and save it to |new_filename|.
+// |old_extents| and |new_extents| are comma-separated lists of "offset:length"
+// extents of |old_filename| and |new_filename|.
+// Returns 0 on success, 1 on I/O error and 2 on data error.
+int bspatch(const char* old_filename,
+            const char* new_filename,
+            const char* patch_filename,
+            const char* old_extents,
+            const char* new_extents) {
   std::unique_ptr<FileInterface> patch_file =
       File::FOpen(patch_filename, O_RDONLY);
-  if (!patch_file)
-    err(1, "Error opening the patch filename %s", patch_filename);
+  if (!patch_file) {
+    fprintf(stderr, "Error opening the patch file %s: %s\n", patch_filename,
+            strerror(errno));
+    return 1;
+  }
   uint64_t patch_size;
   patch_file->GetSize(&patch_size);
   std::vector<uint8_t> patch(patch_size);
-  if (!ReadAll(patch_file, patch.data(), patch_size))
-    errx(1, "Corrupt patch\n");
+  if (!ReadAll(patch_file, patch.data(), patch_size)) {
+    fprintf(stderr, "Error reading the patch file %s: %s\n", patch_filename,
+            strerror(errno));
+    return 1;
+  }
   patch_file.reset();
 
   int using_extents = (old_extents != NULL || new_extents != NULL);
 
   // Open input file for reading.
   std::unique_ptr<FileInterface> old_file = File::FOpen(old_filename, O_RDONLY);
-  if (!old_file)
-    err(1, "Error opening the old filename %s", old_filename);
+  if (!old_file) {
+    fprintf(stderr, "Error opening the old file %s: %s\n", old_filename,
+            strerror(errno));
+    return 1;
+  }
 
   std::vector<ex_t> parsed_old_extents;
   if (using_extents) {
-    if (!ParseExtentStr(old_extents, &parsed_old_extents))
-      errx(1, "Error parsing the old extents");
+    if (!ParseExtentStr(old_extents, &parsed_old_extents)) {
+      fprintf(stderr, "Error parsing the old extents\n");
+      return 2;
+    }
     old_file.reset(new ExtentsFile(std::move(old_file), parsed_old_extents));
   }
 
   // Open output file for writing.
   std::unique_ptr<FileInterface> new_file =
       File::FOpen(new_filename, O_CREAT | O_WRONLY);
-  if (!new_file)
-    err(1, "Error opening the new filename %s", new_filename);
+  if (!new_file) {
+    fprintf(stderr, "Error opening the new file %s: %s\n", new_filename,
+            strerror(errno));
+    return 1;
+  }
 
   std::vector<ex_t> parsed_new_extents;
   if (using_extents) {
-    if (!ParseExtentStr(new_extents, &parsed_new_extents))
-      errx(1, "Error parsing the new extents");
+    if (!ParseExtentStr(new_extents, &parsed_new_extents)) {
+      fprintf(stderr, "Error parsing the new extents\n");
+      return 2;
+    }
     new_file.reset(new ExtentsFile(std::move(new_file), parsed_new_extents));
   }
 
@@ -220,6 +249,8 @@ int bspatch(
   return bspatch(old_file, new_file, patch.data(), patch_size);
 }
 
+// Patch |old_data| with |patch_data| and save it by calling sink function.
+// Returns 0 on success, 1 on I/O error and 2 on data error.
 int bspatch(const uint8_t* old_data,
             size_t old_size,
             const uint8_t* patch_data,
@@ -231,6 +262,8 @@ int bspatch(const uint8_t* old_data,
   return bspatch(old_file, new_file, patch_data, patch_size);
 }
 
+// Patch |old_file| with |patch_data| and save it to |new_file|.
+// Returns 0 on success, 1 on I/O error and 2 on data error.
 int bspatch(const std::unique_ptr<FileInterface>& old_file,
             const std::unique_ptr<FileInterface>& new_file,
             const uint8_t* patch_data,
@@ -252,8 +285,10 @@ int bspatch(const std::unique_ptr<FileInterface>& old_file,
   // extra block; seek forwards in oldfile by z bytes".
 
   // Check for appropriate magic.
-  if (memcmp(patch_data, "BSDIFF40", 8) != 0)
-    errx(1, "Corrupt patch\n");
+  if (memcmp(patch_data, "BSDIFF40", 8) != 0) {
+    fprintf(stderr, "Not a bsdiff patch.\n");
+    return 2;
+  }
 
   // Read lengths from header.
   uint64_t oldsize, newsize;
@@ -262,8 +297,10 @@ int bspatch(const std::unique_ptr<FileInterface>& old_file,
   int64_t signed_newsize = ParseInt64(patch_data + 24);
   newsize = signed_newsize;
   if ((ctrl_len < 0) || (data_len < 0) || (signed_newsize < 0) ||
-      (32 + ctrl_len + data_len > static_cast<int64_t>(patch_size)))
-    errx(1, "Corrupt patch\n");
+      (32 + ctrl_len + data_len > static_cast<int64_t>(patch_size))) {
+    fprintf(stderr, "Corrupt patch.\n");
+    return 2;
+  }
 
   bz_stream cstream;
   cstream.next_in = (char*)patch_data + 32;
@@ -271,8 +308,10 @@ int bspatch(const std::unique_ptr<FileInterface>& old_file,
   cstream.bzalloc = nullptr;
   cstream.bzfree = nullptr;
   cstream.opaque = nullptr;
-  if ((bz2err = BZ2_bzDecompressInit(&cstream, 0, 0)) != BZ_OK)
-    errx(1, "failed to bzinit control stream (%d)\n", bz2err);
+  if ((bz2err = BZ2_bzDecompressInit(&cstream, 0, 0)) != BZ_OK) {
+    fprintf(stderr, "Failed to bzinit control stream (%d)\n", bz2err);
+    return 2;
+  }
 
   bz_stream dstream;
   dstream.next_in = (char*)patch_data + 32 + ctrl_len;
@@ -280,8 +319,10 @@ int bspatch(const std::unique_ptr<FileInterface>& old_file,
   dstream.bzalloc = nullptr;
   dstream.bzfree = nullptr;
   dstream.opaque = nullptr;
-  if ((bz2err = BZ2_bzDecompressInit(&dstream, 0, 0)) != BZ_OK)
-    errx(1, "failed to bzinit diff stream (%d)\n", bz2err);
+  if ((bz2err = BZ2_bzDecompressInit(&dstream, 0, 0)) != BZ_OK) {
+    fprintf(stderr, "Failed to bzinit diff stream (%d)\n", bz2err);
+    return 2;
+  }
 
   bz_stream estream;
   estream.next_in = (char*)patch_data + 32 + ctrl_len + data_len;
@@ -289,13 +330,17 @@ int bspatch(const std::unique_ptr<FileInterface>& old_file,
   estream.bzalloc = nullptr;
   estream.bzfree = nullptr;
   estream.opaque = nullptr;
-  if ((bz2err = BZ2_bzDecompressInit(&estream, 0, 0)) != BZ_OK)
-    errx(1, "failed to bzinit extra stream (%d)\n", bz2err);
+  if ((bz2err = BZ2_bzDecompressInit(&estream, 0, 0)) != BZ_OK) {
+    fprintf(stderr, "Failed to bzinit extra stream (%d)\n", bz2err);
+    return 2;
+  }
 
   uint64_t old_file_pos = 0;
 
-  if (!old_file->GetSize(&oldsize))
-    err(1, "cannot obtain the size of old file");
+  if (!old_file->GetSize(&oldsize)) {
+    fprintf(stderr, "Cannot obtain the size of old file.\n");
+    return 1;
+  }
 
   // The oldpos can be negative, but the new pos is only incremented linearly.
   int64_t oldpos = 0;
@@ -305,34 +350,44 @@ int bspatch(const std::unique_ptr<FileInterface>& old_file,
     int64_t i;
     // Read control data.
     for (i = 0; i <= 2; i++) {
-      if (!ReadBZ2(&cstream, buf, 8))
-        errx(1, "Corrupt patch\n");
+      if (!ReadBZ2(&cstream, buf, 8)) {
+        fprintf(stderr, "Failed to read control stream.\n");
+        return 2;
+      }
       ctrl[i] = ParseInt64(buf);
     }
 
     // Sanity-check.
-    if (ctrl[0] < 0 || ctrl[1] < 0)
-      errx(1, "Corrupt patch\n");
+    if (ctrl[0] < 0 || ctrl[1] < 0) {
+      fprintf(stderr, "Corrupt patch.\n");
+      return 2;
+    }
 
     // Sanity-check.
-    if (newpos + ctrl[0] > newsize)
-      errx(1, "Corrupt patch\n");
+    if (newpos + ctrl[0] > newsize) {
+      fprintf(stderr, "Corrupt patch.\n");
+      return 2;
+    }
 
+    int ret = 0;
     // Add old data to diff string. It is enough to fseek once, at
     // the beginning of the sequence, to avoid unnecessary overhead.
     if ((i = oldpos) < 0) {
       // Write diff block directly to new file without adding old data,
       // because we will skip part where |oldpos| < 0.
-      if (!ReadBZ2AndWriteAll(new_file, &dstream, -i, new_buf.data(),
-                              new_buf.size()))
-        errx(1, "Error during ReadBZ2AndWriteAll()");
-
+      ret = ReadBZ2AndWriteAll(new_file, &dstream, -i, new_buf.data(),
+                               new_buf.size());
+      if (ret)
+        return ret;
       i = 0;
     }
 
     // We just checked that |i| is not negative.
-    if (static_cast<uint64_t>(i) != old_file_pos && !old_file->Seek(i))
-      err(1, "error seeking input file to offset %" PRId64, i);
+    if (static_cast<uint64_t>(i) != old_file_pos && !old_file->Seek(i)) {
+      fprintf(stderr, "Error seeking input file to offset %" PRId64 ": %s\n", i,
+              strerror(errno));
+      return 1;
+    }
     if ((old_file_pos = oldpos + ctrl[0]) > oldsize)
       old_file_pos = oldsize;
 
@@ -340,18 +395,26 @@ int bspatch(const std::unique_ptr<FileInterface>& old_file,
     while (chunk_size > 0) {
       size_t read_bytes;
       size_t bytes_to_read = std::min(chunk_size, old_buf.size());
-      if (!old_file->Read(old_buf.data(), bytes_to_read, &read_bytes))
-        err(1, "error reading from input file");
-      if (!read_bytes)
-        errx(1, "EOF reached while reading from input file");
+      if (!old_file->Read(old_buf.data(), bytes_to_read, &read_bytes)) {
+        perror("Error reading from input file");
+        return 1;
+      }
+      if (!read_bytes) {
+        fprintf(stderr, "EOF reached while reading from input file.\n");
+        return 2;
+      }
       // Read same amount of bytes from diff block
-      if (!ReadBZ2(&dstream, new_buf.data(), read_bytes))
-        errx(1, "Corrupt patch\n");
+      if (!ReadBZ2(&dstream, new_buf.data(), read_bytes)) {
+        fprintf(stderr, "Failed to read diff stream.\n");
+        return 2;
+      }
       // new_buf already has data from diff block, adds old data to it.
       for (size_t k = 0; k < read_bytes; k++)
         new_buf[k] += old_buf[k];
-      if (!WriteAll(new_file, new_buf.data(), read_bytes))
-        err(1, "Error writing new file.");
+      if (!WriteAll(new_file, new_buf.data(), read_bytes)) {
+        perror("Error writing to new file");
+        return 1;
+      }
       chunk_size -= read_bytes;
     }
 
@@ -362,19 +425,23 @@ int bspatch(const std::unique_ptr<FileInterface>& old_file,
     if (oldpos > static_cast<int64_t>(oldsize)) {
       // Write diff block directly to new file without adding old data,
       // because we skipped part where |oldpos| > oldsize.
-      if (!ReadBZ2AndWriteAll(new_file, &dstream, oldpos - oldsize,
-                              new_buf.data(), new_buf.size()))
-        errx(1, "Error during ReadBZ2AndWriteAll()");
+      ret = ReadBZ2AndWriteAll(new_file, &dstream, oldpos - oldsize,
+                               new_buf.data(), new_buf.size());
+      if (ret)
+        return ret;
     }
 
     // Sanity-check.
-    if (newpos + ctrl[1] > newsize)
-      errx(1, "Corrupt patch\n");
+    if (newpos + ctrl[1] > newsize) {
+      fprintf(stderr, "Corrupt patch.\n");
+      return 2;
+    }
 
     // Read extra block.
-    if (!ReadBZ2AndWriteAll(new_file, &estream, ctrl[1], new_buf.data(),
-                            new_buf.size()))
-      errx(1, "Error during ReadBZ2AndWriteAll()");
+    ret = ReadBZ2AndWriteAll(new_file, &estream, ctrl[1], new_buf.data(),
+                             new_buf.size());
+    if (ret)
+      return ret;
 
     // Adjust pointers.
     newpos += ctrl[1];
@@ -389,8 +456,10 @@ int bspatch(const std::unique_ptr<FileInterface>& old_file,
   BZ2_bzDecompressEnd(&dstream);
   BZ2_bzDecompressEnd(&estream);
 
-  if (!new_file->Close())
-    err(1, "Error closing new file");
+  if (!new_file->Close()) {
+    perror("Error closing new file");
+    return 1;
+  }
 
   return 0;
 }
