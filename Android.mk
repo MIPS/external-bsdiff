@@ -104,20 +104,6 @@ LOCAL_STATIC_LIBRARIES := \
     $(bsdiff_common_static_libs)
 include $(BUILD_EXECUTABLE)
 
-# bspatch used in recovery by update_engine_sideload.
-include $(CLEAR_VARS)
-LOCAL_MODULE := bspatch_recovery
-LOCAL_MODULE_STEM := bspatch
-LOCAL_FORCE_STATIC_EXECUTABLE := true
-LOCAL_MODULE_PATH := $(TARGET_RECOVERY_ROOT_OUT)/sbin
-LOCAL_CPP_EXTENSION := .cc
-LOCAL_SRC_FILES := bspatch_main.cc
-LOCAL_CFLAGS := $(bsdiff_common_cflags)
-LOCAL_STATIC_LIBRARIES := \
-    libbspatch \
-    $(bsdiff_common_static_libs)
-include $(BUILD_EXECUTABLE)
-
 # Host executables.
 
 include $(CLEAR_VARS)
