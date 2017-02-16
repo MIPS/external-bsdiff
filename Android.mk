@@ -37,10 +37,12 @@ bsdiff_src_files := \
 # "bspatch" program.
 bspatch_src_files := \
     bspatch.cc \
+    buffer_file.cc \
     extents.cc \
     extents_file.cc \
     file.cc \
-    memory_file.cc
+    memory_file.cc \
+    sink_file.cc
 
 # Unit test files.
 bsdiff_common_unittests := \
@@ -57,6 +59,7 @@ LOCAL_MODULE := libbspatch
 LOCAL_CPP_EXTENSION := .cc
 LOCAL_SRC_FILES := $(bspatch_src_files)
 LOCAL_CFLAGS := $(bsdiff_common_cflags)
+LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_PATH)
 LOCAL_STATIC_LIBRARIES := $(bsdiff_common_static_libs)
 include $(BUILD_STATIC_LIBRARY)
 
@@ -76,6 +79,7 @@ LOCAL_MODULE := libbspatch
 LOCAL_CPP_EXTENSION := .cc
 LOCAL_SRC_FILES := $(bspatch_src_files)
 LOCAL_CFLAGS := $(bsdiff_common_cflags)
+LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_PATH)
 LOCAL_STATIC_LIBRARIES := $(bsdiff_common_static_libs)
 include $(BUILD_HOST_STATIC_LIBRARY)
 
