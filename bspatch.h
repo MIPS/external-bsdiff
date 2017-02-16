@@ -19,6 +19,13 @@ int bspatch(const char* old_filename,
             const char* old_extents,
             const char* new_extents);
 
+int bspatch(const char* old_filename,
+            const char* new_filename,
+            const uint8_t* patch_data,
+            size_t patch_size,
+            const char* old_extents,
+            const char* new_extents);
+
 int bspatch(const uint8_t* old_data,
             size_t old_size,
             const uint8_t* patch_data,

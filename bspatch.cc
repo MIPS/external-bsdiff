@@ -201,6 +201,20 @@ int bspatch(const char* old_filename,
   }
   patch_file.reset();
 
+  return bspatch(old_filename, new_filename, patch.data(), patch_size,
+                 old_extents, new_extents);
+}
+
+// Patch |old_filename| with |patch_data| and save it to |new_filename|.
+// |old_extents| and |new_extents| are comma-separated lists of "offset:length"
+// extents of |old_filename| and |new_filename|.
+// Returns 0 on success, 1 on I/O error and 2 on data error.
+int bspatch(const char* old_filename,
+            const char* new_filename,
+            const uint8_t* patch_data,
+            size_t patch_size,
+            const char* old_extents,
+            const char* new_extents) {
   int using_extents = (old_extents != NULL || new_extents != NULL);
 
   // Open input file for reading.
@@ -242,11 +256,11 @@ int bspatch(const char* old_filename,
                     parsed_new_extents)) {
     // New and old file is overlapping, we can not stream output to new file,
     // cache it in a buffer and write to the file at the end.
-    uint64_t newsize = ParseInt64(patch.data() + 24);
+    uint64_t newsize = ParseInt64(patch_data + 24);
     new_file.reset(new BufferFile(std::move(new_file), newsize));
   }
 
-  return bspatch(old_file, new_file, patch.data(), patch_size);
+  return bspatch(old_file, new_file, patch_data, patch_size);
 }
 
 // Patch |old_data| with |patch_data| and save it by calling sink function.
