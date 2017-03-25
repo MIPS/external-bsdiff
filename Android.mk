@@ -130,6 +130,7 @@ include $(BUILD_HOST_EXECUTABLE)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := bsdiff_unittest
+LOCAL_COMPATIBILITY_SUITE := device-tests
 LOCAL_MODULE_TAGS := debug tests
 LOCAL_CPP_EXTENSION := .cc
 LOCAL_SRC_FILES := $(bsdiff_common_unittests) \
