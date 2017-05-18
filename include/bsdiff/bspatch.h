@@ -9,7 +9,7 @@
 #include <memory>
 #include <vector>
 
-#include "extents_file.h"
+#include "bsdiff/extents_file.h"
 
 namespace bsdiff {
 
