@@ -32,12 +32,12 @@
 namespace bsdiff {
 
 /* An extent, defined by an offset and a length. */
-struct ex_t {
+struct BSDIFF_EXPORT ex_t {
   off_t off;     // the extent offset; negative indicates a sparse extent.
   uint64_t len;  // the extent length.
 };
 
-class ExtentsFile : public FileInterface {
+class BSDIFF_EXPORT ExtentsFile : public FileInterface {
  public:
   // Creates an ExtentsFile based on the underlying |file| passed. The positions
   // in the ExtentsFile will be linearly mapped to the extents provided in
