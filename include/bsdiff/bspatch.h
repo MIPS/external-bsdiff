@@ -13,12 +13,14 @@
 
 namespace bsdiff {
 
+BSDIFF_EXPORT
 int bspatch(const char* old_filename,
             const char* new_filename,
             const char* patch_filename,
             const char* old_extents,
             const char* new_extents);
 
+BSDIFF_EXPORT
 int bspatch(const char* old_filename,
             const char* new_filename,
             const uint8_t* patch_data,
@@ -26,12 +28,14 @@ int bspatch(const char* old_filename,
             const char* old_extents,
             const char* new_extents);
 
+BSDIFF_EXPORT
 int bspatch(const uint8_t* old_data,
             size_t old_size,
             const uint8_t* patch_data,
             size_t patch_size,
             const std::function<size_t(const uint8_t*, size_t)>& sink);
 
+BSDIFF_EXPORT
 int bspatch(const std::unique_ptr<FileInterface>& old_file,
             const std::unique_ptr<FileInterface>& new_file,
             const uint8_t* patch_data,
