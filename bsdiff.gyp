@@ -23,12 +23,22 @@
     ],
     'include_dirs': ['include'],
   },
+  'variables': {
+    'bspatch_sources': [
+      'bspatch.cc',
+      'buffer_file.cc',
+      'extents.cc',
+      'extents_file.cc',
+      'file.cc',
+      'memory_file.cc',
+      'sink_file.cc',
+    ],
+  },
   'targets': [
     # bsdiff library
     {
       'target_name': 'libbsdiff',
-      'type': 'static_library',
-      'standalone_static_library': 1,
+      'type': 'shared_library',
       'link_settings': {
         'libraries': [
           '-lbz2',
@@ -54,21 +64,14 @@
     # bspatch library
     {
       'target_name': 'libbspatch',
-      'standalone_static_library': 1,
-      'type': 'static_library',
+      'type': 'shared_library',
       'link_settings': {
         'libraries': [
           '-lbz2',
         ],
       },
       'sources': [
-        'bspatch.cc',
-        'buffer_file.cc',
-        'extents.cc',
-        'extents_file.cc',
-        'file.cc',
-        'memory_file.cc',
-        'sink_file.cc',
+        '<@(bspatch_sources)',
       ],
     },
     # bspatch executable
@@ -86,12 +89,25 @@
   'conditions': [
     ['USE_test == 1', {
       'targets': [
+        # bspatch static library for test
+        {
+          'target_name': 'libbspatch_test',
+          'type': 'static_library',
+          'link_settings': {
+            'libraries': [
+              '-lbz2',
+            ],
+          },
+          'sources': [
+            '<@(bspatch_sources)',
+          ],
+        },
         {
           'target_name': 'bsdiff_unittest',
           'type': 'executable',
           'dependencies': [
             'libbsdiff',
-            'libbspatch',
+            'libbspatch_test',
             '../common-mk/testrunner.gyp:testrunner',
           ],
           'variables': {

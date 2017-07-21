@@ -15,12 +15,16 @@
 #include "divsufsort.h"
 #endif
 
+#include "bsdiff/common.h"
+
 namespace bsdiff {
 
+BSDIFF_EXPORT
 int bsdiff(const char* old_filename,
            const char* new_filename,
            const char* patch_filename);
 
+BSDIFF_EXPORT
 int bsdiff(const u_char* old_buf,
            off_t oldsize,
            const u_char* new_buf,

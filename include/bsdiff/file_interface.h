@@ -7,9 +7,11 @@
 
 #include <sys/types.h>
 
+#include "bsdiff/common.h"
+
 namespace bsdiff {
 
-class FileInterface {
+class BSDIFF_EXPORT FileInterface {
  public:
   virtual ~FileInterface() = default;
 
