@@ -51,7 +51,11 @@ cc_library_static {
     name: "libbsdiff",
     defaults: ["bsdiff_defaults"],
 
-    srcs: ["bsdiff.cc"],
+    srcs: [
+        "bsdiff.cc",
+        "bz2_compressor.cc",
+        "patch_writer.cc",
+    ],
     static_libs: [
         "libdivsufsort64",
         "libdivsufsort",
