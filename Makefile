@@ -33,7 +33,9 @@ clean:
 ### List of source files for each project. Keep in sync with the Android.mk.
 # "bsdiff" program.
 bsdiff_src_files := \
-    bsdiff.cc
+    bsdiff.cc \
+    bz2_compressor.cc \
+    patch_writer.cc
 
 # "bspatch" program.
 bspatch_src_files := \
