@@ -48,6 +48,8 @@
       },
       'sources': [
         'bsdiff.cc',
+        "bz2_compressor.cc",
+        "patch_writer.cc",
       ],
     },
     # bsdiff executable
