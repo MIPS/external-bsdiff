@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-#include "test_utils.h"
+#include "bsdiff/test_utils.h"
 
 using std::string;
 using std::vector;

@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "patch_writer.h"
+#include "bsdiff/patch_writer.h"
 
 #include <string.h>
 
-#include "logging.h"
+#include "bsdiff/logging.h"
 
 using std::endl;
 
