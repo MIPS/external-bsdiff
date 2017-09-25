@@ -9,7 +9,7 @@ LIBRARIES-$(USE_BSDIFF) += libbsdiff.so
 BINARIES := $(EXECUTABLES-y) $(LIBRARIES-y)
 
 INSTALL = install
-CPPFLAGS += -Iinclude
+CPPFLAGS += -Iinclude -I..
 CXXFLAGS += -std=c++11 -O3 -Wall -Werror -fPIC
 
 DESTDIR ?=
