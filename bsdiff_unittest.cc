@@ -10,8 +10,6 @@
 
 #include "bsdiff/test_utils.h"
 
-using std::string;
-using std::vector;
 using test_utils::BsdiffPatchFile;
 
 namespace bsdiff {
@@ -46,8 +44,8 @@ TEST_F(BsdiffTest, EqualEmptyFiles) {
 }
 
 TEST_F(BsdiffTest, EqualSmallFiles) {
-  string some_text = "Hello world!";
-  vector<uint8_t> vec_some_text(some_text.begin(), some_text.end());
+  std::string some_text = "Hello world!";
+  std::vector<uint8_t> vec_some_text(some_text.begin(), some_text.end());
   test_utils::WriteFile(old_file_.filename(), vec_some_text);
   EXPECT_EQ(0, bsdiff(old_file_.filename().c_str(),
                       new_file_.filename().c_str(),
