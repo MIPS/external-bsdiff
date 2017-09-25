@@ -21,7 +21,12 @@
     'cflags_cc': [
       '-Wnon-virtual-dtor',
     ],
-    'include_dirs': ['include'],
+    'include_dirs': [
+      'include',
+      # We need this include dir because we include all the local code as
+      # "bsdiff/...".
+      '<(platform2_root)/../aosp/external',
+    ],
   },
   'variables': {
     'bspatch_sources': [

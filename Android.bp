@@ -16,6 +16,9 @@ cc_defaults {
     name: "bsdiff_defaults",
     host_supported: true,
     static_libs: ["libbz"],
+    // Allow internal includes to be referenced with the "bsdiff/" prefix in the
+    // path.
+    include_dirs: ["external"],
     export_include_dirs: [
         "include",
         // TODO(deymo): Remove include/bsdiff when all callers use the "bsdiff/"
