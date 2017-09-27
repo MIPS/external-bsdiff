@@ -143,7 +143,8 @@ int bsdiff(const u_char* old_buf, off_t oldsize, const u_char* new_buf,
 		if ((I=static_cast<saidx_t*>(malloc((oldsize+1)*sizeof(saidx_t))))==NULL)
 			err(1,NULL);
 
-		if (divsufsort(old_buf, I, oldsize)) err(1, "divsufsort");
+		// Note: divsufsort() fails when the passed size is 0 and old_buf is NULL.
+		if (oldsize > 0 && divsufsort(old_buf, I, oldsize)) err(1, "divsufsort");
 		if (I_cache)
 			*I_cache = I;
 	}
