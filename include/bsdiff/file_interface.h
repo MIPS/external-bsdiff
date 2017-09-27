@@ -5,6 +5,7 @@
 #ifndef _BSDIFF_FILE_INTERFACE_H_
 #define _BSDIFF_FILE_INTERFACE_H_
 
+#include <stdint.h>
 #include <sys/types.h>
 
 #include "bsdiff/common.h"
