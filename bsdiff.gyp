@@ -128,6 +128,7 @@
             'bspatch_unittest.cc',
             'extents_file_unittest.cc',
             'extents_unittest.cc',
+            'patch_writer_unittest.cc',
             'test_utils.cc',
           ],
         },

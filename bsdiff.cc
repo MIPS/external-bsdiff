@@ -118,12 +118,17 @@ int bsdiff(const char* old_filename, const char* new_filename,
 	return ret;
 }
 
-// Generate bsdiff patch from |old_buf| to |new_buf|, save the patch file to
-// |patch_filename|. Returns 0 on success.
-// |I_cache| can be used to cache the suffix array if the same |old_buf| is used
-// repeatedly, pass nullptr if not needed.
+// TODO(deymo): Deprecate this version of the interface and move all callers
+// to the underlying version using PatchWriterInterface instead. This allows
+// more flexible options including different encodings.
 int bsdiff(const u_char* old_buf, off_t oldsize, const u_char* new_buf,
            off_t newsize, const char* patch_filename, saidx_t** I_cache) {
+	BsdiffPatchWriter patch(patch_filename);
+	return bsdiff(old_buf, oldsize, new_buf, newsize, &patch, I_cache);
+}
+
+int bsdiff(const u_char* old_buf, off_t oldsize, const u_char* new_buf,
+           off_t newsize, PatchWriterInterface* patch, saidx_t** I_cache) {
 	saidx_t *I;
 	off_t scan,pos=0,len;
 	off_t lastscan,lastpos,lastoffset;
@@ -131,7 +136,6 @@ int bsdiff(const u_char* old_buf, off_t oldsize, const u_char* new_buf,
 	off_t s,Sf,lenf,Sb,lenb;
 	off_t overlap,Ss,lens;
 	off_t i;
-	BsdiffPatchWriter patch(old_buf, oldsize, new_buf, newsize);
 
 	if (I_cache && *I_cache) {
 		I = *I_cache;
@@ -139,13 +143,14 @@ int bsdiff(const u_char* old_buf, off_t oldsize, const u_char* new_buf,
 		if ((I=static_cast<saidx_t*>(malloc((oldsize+1)*sizeof(saidx_t))))==NULL)
 			err(1,NULL);
 
-		if (divsufsort(old_buf, I, oldsize)) err(1, "divsufsort");
+		// Note: divsufsort() fails when the passed size is 0 and old_buf is NULL.
+		if (oldsize > 0 && divsufsort(old_buf, I, oldsize)) err(1, "divsufsort");
 		if (I_cache)
 			*I_cache = I;
 	}
 
-	/* Create the patch file */
-	if (!patch.Open(patch_filename))
+	/* Initialize the patch file */
+	if (!patch->InitializeBuffers(old_buf, oldsize, new_buf, newsize))
 		return 1;
 
 	/* Compute the differences, writing ctrl as we go */
@@ -224,9 +229,10 @@ int bsdiff(const u_char* old_buf, off_t oldsize, const u_char* new_buf,
 				lenb-=lens;
 			};
 
-			if (!patch.AddControlEntry(ControlEntry(lenf,
-			                                        (scan - lenb) - (lastscan + lenf),
-			                                        (pos - lenb) - (lastpos + lenf))))
+			if (!patch->AddControlEntry(
+			        ControlEntry(lenf,
+			                     (scan - lenb) - (lastscan + lenf),
+			                     (pos - lenb) - (lastpos + lenf))))
 				errx(1, "Writing a control entry");
 
 			lastscan=scan-lenb;
@@ -234,7 +240,7 @@ int bsdiff(const u_char* old_buf, off_t oldsize, const u_char* new_buf,
 			lastoffset=pos-scan;
 		};
 	};
-	if (!patch.Close())
+	if (!patch->Close())
 		errx(1, "Closing the patch file");
 
 	if (I_cache == nullptr)
