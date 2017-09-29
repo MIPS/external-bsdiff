@@ -31,10 +31,18 @@ void EncodeInt64(int64_t x, uint8_t* buf) {
 
 namespace bsdiff {
 
-bool BsdiffPatchWriter::Open(const std::string& patch_filename) {
-  fp_ = fopen(patch_filename.c_str(), "w");
+bool BsdiffPatchWriter::InitializeBuffers(const uint8_t* old_buf,
+                                          uint64_t old_size,
+                                          const uint8_t* new_buf,
+                                          uint64_t new_size) {
+  old_buf_ = old_buf;
+  old_size_ = old_size;
+  new_buf_ = new_buf;
+  new_size_ = new_size;
+
+  fp_ = fopen(patch_filename_.c_str(), "w");
   if (!fp_) {
-    LOG(ERROR) << "Opening " << patch_filename << endl;
+    LOG(ERROR) << "Opening " << patch_filename_ << endl;
     return false;
   }
   return true;

@@ -101,10 +101,10 @@ cc_test {
         "bspatch_unittest.cc",
         "extents_file_unittest.cc",
         "extents_unittest.cc",
+        "patch_writer_unittest.cc",
         "test_utils.cc",
         "testrunner.cc",
     ],
-    cflags: ["-DBSDIFF_TARGET_UNITTEST"],
     static_libs: [
         "libbsdiff",
         "libbspatch",
@@ -113,4 +113,9 @@ cc_test {
         "libdivsufsort",
         "libbz",
     ],
+    target: {
+        android: {
+            cflags: ["-DBSDIFF_TARGET_UNITTEST"],
+        },
+    },
 }
