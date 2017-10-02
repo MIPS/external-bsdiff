@@ -5,6 +5,10 @@
 #ifndef _BSDIFF_PATCH_WRITER_INTERFACE_H_
 #define _BSDIFF_PATCH_WRITER_INTERFACE_H_
 
+#include <stdint.h>
+
+#include <cstddef>
+
 namespace bsdiff {
 
 struct ControlEntry {
@@ -29,21 +33,20 @@ class PatchWriterInterface {
  public:
   virtual ~PatchWriterInterface() = default;
 
-  // Initialize the patch writer old and new files with the given buffers.
-  // These buffers are not copied into this class and must be valid until
-  // Close() is called. They will be used to encode the extra and diff streams
-  // when calling AddControlEntry(). Returns whether the initialization
-  // succeeded.
-  virtual bool InitializeBuffers(const uint8_t* old_buf,
-                                 uint64_t old_size,
-                                 const uint8_t* new_buf,
-                                 uint64_t new_size) = 0;
+  // Initialize the patch writer.
+  virtual bool Init() = 0;
 
-  // Add a new control triplet entry to the patch. The |entry.diff_size| bytes
-  // for the diff stream and the |entry.extra_size| bytes for the extra stream
-  // will be computed and added to the corresponding streams in the patch.
-  // Returns whether the operation succeeded. The operation can fail if either
-  // the old or new files are referenced out of bounds.
+  // Write the passed |data| buffer of length |size| to the Diff or Extra
+  // streams respectively. Each method can be called independently from each
+  // other and calls don't need to be a correlation with the AddControlEntry()
+  // until Close() is called.
+  virtual bool WriteDiffStream(const uint8_t* data, size_t size) = 0;
+  virtual bool WriteExtraStream(const uint8_t* data, size_t size) = 0;
+
+  // Add a new control triplet entry to the patch. These triplets may be added
+  // at any point before calling Close(), regardless of whether the
+  // corresponding WriteDiffStream() and WriteExtraStream() have been called
+  // yet.
   virtual bool AddControlEntry(const ControlEntry& entry) = 0;
 
   // Finalize the patch writing process and close the file.

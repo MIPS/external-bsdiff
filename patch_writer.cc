@@ -12,11 +12,6 @@ using std::endl;
 
 namespace {
 
-// The maximum positive number that we should encode. A number larger than this
-// for unsigned fields will be interpreted as a negative value and thus a
-// corrupt patch.
-const uint64_t kMaxEncodedUint64Value = (1ULL << 63) - 1;
-
 constexpr uint8_t kMagicHeader[] = "BSDIFF40";
 
 void EncodeInt64(int64_t x, uint8_t* buf) {
@@ -31,15 +26,7 @@ void EncodeInt64(int64_t x, uint8_t* buf) {
 
 namespace bsdiff {
 
-bool BsdiffPatchWriter::InitializeBuffers(const uint8_t* old_buf,
-                                          uint64_t old_size,
-                                          const uint8_t* new_buf,
-                                          uint64_t new_size) {
-  old_buf_ = old_buf;
-  old_size_ = old_size;
-  new_buf_ = new_buf;
-  new_size_ = new_size;
-
+bool BsdiffPatchWriter::Init() {
   fp_ = fopen(patch_filename_.c_str(), "w");
   if (!fp_) {
     LOG(ERROR) << "Opening " << patch_filename_ << endl;
@@ -48,29 +35,15 @@ bool BsdiffPatchWriter::InitializeBuffers(const uint8_t* old_buf,
   return true;
 }
 
+bool BsdiffPatchWriter::WriteDiffStream(const uint8_t* data, size_t size) {
+  return diff_stream_.Write(data, size);
+}
+
+bool BsdiffPatchWriter::WriteExtraStream(const uint8_t* data, size_t size) {
+  return extra_stream_.Write(data, size);
+}
+
 bool BsdiffPatchWriter::AddControlEntry(const ControlEntry& entry) {
-  if (entry.diff_size > kMaxEncodedUint64Value) {
-    LOG(ERROR) << "Encoding value out of range " << entry.diff_size << endl;
-    return false;
-  }
-
-  if (entry.extra_size > kMaxEncodedUint64Value) {
-    LOG(ERROR) << "Encoding value out of range " << entry.extra_size << endl;
-    return false;
-  }
-
-  if (written_output_ + entry.diff_size + entry.extra_size > new_size_) {
-    LOG(ERROR) << "Wrote more output than the declared new_size" << endl;
-    return false;
-  }
-
-  if (entry.diff_size > 0 &&
-      (old_pos_ < 0 || static_cast<uint64_t>(old_pos_) >= old_size_)) {
-    LOG(ERROR) << "The pointer in the old stream (" << old_pos_
-               << ") is out of bounds [0, " << old_size_ << ")" << endl;
-    return false;
-  }
-
   // Generate the 24 byte control entry.
   uint8_t buf[24];
   EncodeInt64(entry.diff_size, buf);
@@ -78,20 +51,6 @@ bool BsdiffPatchWriter::AddControlEntry(const ControlEntry& entry) {
   EncodeInt64(entry.offset_increment, buf + 16);
   if (!ctrl_stream_.Write(buf, sizeof(buf)))
     return false;
-
-  // Generate the diff stream.
-  std::vector<uint8_t> diff(entry.diff_size);
-  for (uint64_t i = 0; i < entry.diff_size; ++i) {
-    diff[i] = new_buf_[written_output_ + i] - old_buf_[old_pos_ + i];
-  }
-  if (!diff_stream_.Write(diff.data(), diff.size()))
-    return false;
-
-  if (!extra_stream_.Write(new_buf_ + written_output_ + entry.diff_size,
-                           entry.extra_size))
-    return false;
-
-  old_pos_ += entry.diff_size + entry.offset_increment;
   written_output_ += entry.diff_size + entry.extra_size;
   return true;
 }
@@ -101,14 +60,12 @@ bool BsdiffPatchWriter::Close() {
     LOG(ERROR) << "File not open." << endl;
     return false;
   }
-  if (written_output_ != new_size_) {
-    LOG(ERROR) << "Close() called but not all the output was written" << endl;
-    return false;
-  }
 
   if (!ctrl_stream_.Finish() || !diff_stream_.Finish() ||
-      !extra_stream_.Finish())
+      !extra_stream_.Finish()) {
+    LOG(ERROR) << "Finalizing compressed streams." << endl;
     return false;
+  }
 
   auto ctrl_data = ctrl_stream_.GetCompressedData();
   auto diff_data = diff_stream_.GetCompressedData();
@@ -155,7 +112,7 @@ bool BsdiffPatchWriter::WriteHeader(uint64_t ctrl_size, uint64_t diff_size) {
   memcpy(header, kMagicHeader, 8);
   EncodeInt64(ctrl_size, header + 8);
   EncodeInt64(diff_size, header + 16);
-  EncodeInt64(new_size_, header + 24);
+  EncodeInt64(written_output_, header + 24);
   if (fwrite(header, sizeof(header), 1, fp_) != 1) {
     LOG(ERROR) << "writing to the patch file" << endl;
     return false;
