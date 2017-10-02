@@ -27,6 +27,11 @@ struct ControlEntry {
 
   // The value to add to the source pointer after patching from the diff stream.
   int64_t offset_increment;
+
+  bool operator==(const ControlEntry& o) const {
+    return diff_size == o.diff_size && extra_size == o.extra_size &&
+           offset_increment == o.offset_increment;
+  }
 };
 
 class PatchWriterInterface {
