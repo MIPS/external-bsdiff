@@ -41,6 +41,7 @@ __FBSDID("$FreeBSD: src/usr.bin/bsdiff/bsdiff/bsdiff.c,v 1.1 2005/08/06 01:59:05
 
 #include <algorithm>
 
+#include "bsdiff/diff_encoder.h"
 #include "bsdiff/patch_writer.h"
 
 namespace bsdiff {
@@ -149,9 +150,10 @@ int bsdiff(const u_char* old_buf, off_t oldsize, const u_char* new_buf,
 			*I_cache = I;
 	}
 
-	/* Initialize the patch file */
-	if (!patch->InitializeBuffers(old_buf, oldsize, new_buf, newsize))
+	/* Initialize the patch file encoder */
+	if (!patch->Init())
 		return 1;
+	DiffEncoder diff_encoder(patch, old_buf, oldsize, new_buf, newsize);
 
 	/* Compute the differences, writing ctrl as we go */
 	scan=0;len=0;
@@ -229,7 +231,7 @@ int bsdiff(const u_char* old_buf, off_t oldsize, const u_char* new_buf,
 				lenb-=lens;
 			};
 
-			if (!patch->AddControlEntry(
+			if (!diff_encoder.AddControlEntry(
 			        ControlEntry(lenf,
 			                     (scan - lenb) - (lastscan + lenf),
 			                     (pos - lenb) - (lastpos + lenf))))
@@ -240,7 +242,7 @@ int bsdiff(const u_char* old_buf, off_t oldsize, const u_char* new_buf,
 			lastoffset=pos-scan;
 		};
 	};
-	if (!patch->Close())
+	if (!diff_encoder.Close())
 		errx(1, "Closing the patch file");
 
 	if (I_cache == nullptr)
