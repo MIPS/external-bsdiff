@@ -46,12 +46,13 @@ namespace bsdiff {
 
 class BsdiffPatchWriterTest : public testing::Test {
  protected:
+  void SetUp() override { EXPECT_TRUE(patch_writer_.Init()); }
+
   test_utils::ScopedTempFile patch_file_{"bsdiff_newfile.XXXXXX"};
   BsdiffPatchWriter patch_writer_{patch_file_.filename()};
 };
 
 TEST_F(BsdiffPatchWriterTest, CreateEmptyPatchTest) {
-  EXPECT_TRUE(patch_writer_.InitializeBuffers(nullptr, 0, nullptr, 0));
   EXPECT_TRUE(patch_writer_.Close());
 
   test_utils::BsdiffPatchFile patch;
@@ -64,12 +65,11 @@ TEST_F(BsdiffPatchWriterTest, CreateEmptyPatchTest) {
 }
 
 TEST_F(BsdiffPatchWriterTest, AllInExtraStreamTest) {
-  EXPECT_TRUE(patch_writer_.InitializeBuffers(
-      nullptr, 0, kHelloWorld, sizeof(kHelloWorld)));
   // Write to the extra stream in two parts: first 5 bytes, then the rest.
   EXPECT_TRUE(patch_writer_.AddControlEntry(ControlEntry(0, 5, 0)));
   EXPECT_TRUE(patch_writer_.AddControlEntry(
       ControlEntry(0, sizeof(kHelloWorld) - 5, 0)));
+  EXPECT_TRUE(patch_writer_.WriteExtraStream(kHelloWorld, sizeof(kHelloWorld)));
   EXPECT_TRUE(patch_writer_.Close());
 
   test_utils::BsdiffPatchFile patch;
@@ -87,11 +87,11 @@ TEST_F(BsdiffPatchWriterTest, AllInExtraStreamTest) {
 }
 
 TEST_F(BsdiffPatchWriterTest, AllInDiffStreamTest) {
-  EXPECT_TRUE(patch_writer_.InitializeBuffers(
-      kHelloWorld, sizeof(kHelloWorld), kHelloWorld, sizeof(kHelloWorld)));
   // Write to the extra stream in two parts: first 5 bytes, then the rest.
   EXPECT_TRUE(
       patch_writer_.AddControlEntry(ControlEntry(sizeof(kHelloWorld), 0, 0)));
+  std::vector<uint8_t> zeros(sizeof(kHelloWorld), 0);
+  EXPECT_TRUE(patch_writer_.WriteDiffStream(zeros.data(), zeros.size()));
   EXPECT_TRUE(patch_writer_.Close());
 
   test_utils::BsdiffPatchFile patch;
