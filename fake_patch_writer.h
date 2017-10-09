@@ -20,14 +20,9 @@ class FakePatchWriter : public PatchWriterInterface {
   ~FakePatchWriter() override = default;
 
   // PatchWriterInterface overrides.
-  bool InitializeBuffers(const uint8_t* old_buf,
-                         uint64_t old_size,
-                         const uint8_t* new_buf,
-                         uint64_t new_size) override {
+  bool Init() override {
     EXPECT_FALSE(initialized_);
     initialized_ = true;
-    new_size_ = new_size;
-    old_size_ = old_size;
     return true;
   }
 
@@ -35,6 +30,16 @@ class FakePatchWriter : public PatchWriterInterface {
     EXPECT_TRUE(initialized_);
     EXPECT_FALSE(closed_);
     entries_.push_back(entry);
+    return true;
+  }
+
+  bool WriteDiffStream(const uint8_t* data, size_t size) override {
+    diff_stream_.insert(diff_stream_.end(), data, data + size);
+    return true;
+  }
+
+  bool WriteExtraStream(const uint8_t* data, size_t size) override {
+    extra_stream_.insert(extra_stream_.end(), data, data + size);
     return true;
   }
 
@@ -46,22 +51,20 @@ class FakePatchWriter : public PatchWriterInterface {
 
   // Fake getter methods.
   const std::vector<ControlEntry>& entries() const { return entries_; }
-
-  uint64_t new_size() const { return new_size_; }
-  uint64_t old_size() const { return old_size_; }
+  const std::vector<uint8_t>& diff_stream() const { return diff_stream_; }
+  const std::vector<uint8_t>& extra_stream() const { return extra_stream_; }
 
  private:
   // The list of ControlEntry passed to this class.
   std::vector<ControlEntry> entries_;
+  std::vector<uint8_t> diff_stream_;
+  std::vector<uint8_t> extra_stream_;
 
   // Whether this class was initialized.
   bool initialized_{false};
 
   // Whether the patch was closed.
   bool closed_{false};
-
-  uint64_t new_size_;
-  uint64_t old_size_;
 };
 
 }  // namespace bsdiff

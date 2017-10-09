@@ -35,6 +35,7 @@ clean:
 bsdiff_src_files := \
     bsdiff.cc \
     bz2_compressor.cc \
+    diff_encoder.cc \
     patch_writer.cc
 
 # "bspatch" program.
@@ -51,6 +52,7 @@ bspatch_src_files := \
 bsdiff_common_unittests := \
     bsdiff_unittest.cc \
     bspatch_unittest.cc \
+    diff_encoder_unittest.cc \
     extents_file_unittest.cc \
     extents_unittest.cc \
     patch_writer_unittest.cc \
