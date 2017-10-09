@@ -53,8 +53,9 @@
       },
       'sources': [
         'bsdiff.cc',
-        "bz2_compressor.cc",
-        "patch_writer.cc",
+        'bz2_compressor.cc',
+        'diff_encoder.cc',
+        'patch_writer.cc',
       ],
     },
     # bsdiff executable
@@ -126,6 +127,7 @@
           'sources': [
             'bsdiff_unittest.cc',
             'bspatch_unittest.cc',
+            'diff_encoder_unittest.cc',
             'extents_file_unittest.cc',
             'extents_unittest.cc',
             'patch_writer_unittest.cc',

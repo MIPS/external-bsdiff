@@ -23,10 +23,9 @@ class BsdiffPatchWriter : public PatchWriterInterface {
       : patch_filename_(patch_filename) {}
 
   // PatchWriterInterface overrides.
-  bool InitializeBuffers(const uint8_t* old_buf,
-                         uint64_t old_size,
-                         const uint8_t* new_buf,
-                         uint64_t new_size) override;
+  bool Init() override;
+  bool WriteDiffStream(const uint8_t* data, size_t size) override;
+  bool WriteExtraStream(const uint8_t* data, size_t size) override;
   bool AddControlEntry(const ControlEntry& entry) override;
   bool Close() override;
 
@@ -35,17 +34,9 @@ class BsdiffPatchWriter : public PatchWriterInterface {
   // control block and the compressed diff block.
   bool WriteHeader(uint64_t ctrl_size, uint64_t diff_size);
 
-  // Old and new file buffers.
-  const uint8_t* old_buf_{nullptr};
-  uint64_t old_size_{0};
-  const uint8_t* new_buf_{nullptr};
-  uint64_t new_size_{0};
-
-  // Bytes of the new_buf_ already written.
+  // Bytes of the new files already written. Needed to store the new length in
+  // the header of the file.
   uint64_t written_output_{0};
-
-  // The current position in the old buf.
-  int64_t old_pos_{0};
 
   // The current file we are writing to.
   FILE* fp_{nullptr};
