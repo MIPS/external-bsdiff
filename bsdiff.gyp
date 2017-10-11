@@ -56,6 +56,7 @@
         'bz2_compressor.cc',
         'diff_encoder.cc',
         'patch_writer.cc',
+        'split_patch_writer.cc',
       ],
     },
     # bsdiff executable
@@ -131,6 +132,7 @@
             'extents_file_unittest.cc',
             'extents_unittest.cc',
             'patch_writer_unittest.cc',
+            'split_patch_writer_unittest.cc',
             'test_utils.cc',
           ],
         },

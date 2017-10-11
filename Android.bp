@@ -59,6 +59,7 @@ cc_library_static {
         "bz2_compressor.cc",
         "diff_encoder.cc",
         "patch_writer.cc",
+        "split_patch_writer.cc",
     ],
     static_libs: [
         "libdivsufsort64",
@@ -104,6 +105,7 @@ cc_test {
         "extents_file_unittest.cc",
         "extents_unittest.cc",
         "patch_writer_unittest.cc",
+        "split_patch_writer_unittest.cc",
         "test_utils.cc",
         "testrunner.cc",
     ],

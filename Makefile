@@ -36,7 +36,8 @@ bsdiff_src_files := \
     bsdiff.cc \
     bz2_compressor.cc \
     diff_encoder.cc \
-    patch_writer.cc
+    patch_writer.cc \
+    split_patch_writer.cc
 
 # "bspatch" program.
 bspatch_src_files := \
@@ -56,6 +57,7 @@ bsdiff_common_unittests := \
     extents_file_unittest.cc \
     extents_unittest.cc \
     patch_writer_unittest.cc \
+    split_patch_writer_unittest.cc \
     test_utils.cc \
     testrunner.cc
 
