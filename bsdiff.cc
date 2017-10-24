@@ -43,61 +43,21 @@ __FBSDID("$FreeBSD: src/usr.bin/bsdiff/bsdiff/bsdiff.c,v 1.1 2005/08/06 01:59:05
 
 #include "bsdiff/diff_encoder.h"
 #include "bsdiff/patch_writer.h"
+#include "bsdiff/suffix_array_index.h"
 
 namespace bsdiff {
-
-static off_t matchlen(const u_char* old, off_t oldsize, const u_char* new_buf,
-                      off_t newsize) {
-	off_t i;
-
-	for(i=0;(i<oldsize)&&(i<newsize);i++)
-		if(old[i]!=new_buf[i]) break;
-
-	return i;
-}
-
-// This is a binary search of the string |new_buf| of size |newsize| (or a
-// prefix of it) in the |old| string with size |oldsize| using the suffix array
-// |I|. |st| and |en| is the start and end of the search range (inclusive).
-// Returns the length of the longest prefix found and stores the position of the
-// string found in |*pos|.
-static off_t search(saidx_t* I, const u_char* old, off_t oldsize,
-                    const u_char* new_buf, off_t newsize, off_t st, off_t en,
-                    off_t* pos) {
-	off_t x,y;
-
-	if(en-st<2) {
-		x=matchlen(old+I[st],oldsize-I[st],new_buf,newsize);
-		y=matchlen(old+I[en],oldsize-I[en],new_buf,newsize);
-
-		if(x>y) {
-			*pos=I[st];
-			return x;
-		} else {
-			*pos=I[en];
-			return y;
-		}
-	};
-
-	x=st+(en-st)/2;
-	if(memcmp(old+I[x],new_buf,std::min(oldsize-I[x],newsize))<=0) {
-		return search(I,old,oldsize,new_buf,newsize,x,en,pos);
-	} else {
-		return search(I,old,oldsize,new_buf,newsize,st,x,pos);
-	};
-}
 
 int bsdiff(const char* old_filename, const char* new_filename,
            const char* patch_filename) {
 	int fd;
-	u_char *old_buf,*new_buf;
-	off_t oldsize,newsize;
+	uint8_t *old_buf,*new_buf;
+	ssize_t oldsize,newsize;
 
 	/* Allocate oldsize+1 bytes instead of oldsize bytes to ensure
 		that we never try to malloc(0) and get a NULL pointer */
 	if(((fd=open(old_filename,O_RDONLY,0))<0) ||
 		((oldsize=lseek(fd,0,SEEK_END))==-1) ||
-		((old_buf=static_cast<u_char*>(malloc(oldsize+1)))==NULL) ||
+		((old_buf=static_cast<uint8_t*>(malloc(oldsize+1)))==NULL) ||
 		(lseek(fd,0,SEEK_SET)!=0) ||
 		(read(fd,old_buf,oldsize)!=oldsize) ||
 		(close(fd)==-1)) err(1,"%s",old_filename);
@@ -106,7 +66,7 @@ int bsdiff(const char* old_filename, const char* new_filename,
 		that we never try to malloc(0) and get a NULL pointer */
 	if(((fd=open(new_filename,O_RDONLY,0))<0) ||
 		((newsize=lseek(fd,0,SEEK_END))==-1) ||
-		((new_buf = static_cast<u_char*>(malloc(newsize+1)))==NULL) ||
+		((new_buf = static_cast<uint8_t*>(malloc(newsize+1)))==NULL) ||
 		(lseek(fd,0,SEEK_SET)!=0) ||
 		(read(fd,new_buf,newsize)!=newsize) ||
 		(close(fd)==-1)) err(1,"%s",new_filename);
@@ -122,32 +82,39 @@ int bsdiff(const char* old_filename, const char* new_filename,
 // TODO(deymo): Deprecate this version of the interface and move all callers
 // to the underlying version using PatchWriterInterface instead. This allows
 // more flexible options including different encodings.
-int bsdiff(const u_char* old_buf, off_t oldsize, const u_char* new_buf,
-           off_t newsize, const char* patch_filename, saidx_t** I_cache) {
+int bsdiff(const uint8_t* old_buf, size_t oldsize, const uint8_t* new_buf,
+           size_t newsize, const char* patch_filename,
+           SuffixArrayIndexInterface** sai_cache) {
 	BsdiffPatchWriter patch(patch_filename);
-	return bsdiff(old_buf, oldsize, new_buf, newsize, &patch, I_cache);
+	return bsdiff(old_buf, oldsize, new_buf, newsize, &patch, sai_cache);
 }
 
-int bsdiff(const u_char* old_buf, off_t oldsize, const u_char* new_buf,
-           off_t newsize, PatchWriterInterface* patch, saidx_t** I_cache) {
-	saidx_t *I;
-	off_t scan,pos=0,len;
-	off_t lastscan,lastpos,lastoffset;
-	off_t oldscore,scsc;
-	off_t s,Sf,lenf,Sb,lenb;
-	off_t overlap,Ss,lens;
-	off_t i;
+int bsdiff(const uint8_t* old_buf, size_t oldsize, const uint8_t* new_buf,
+           size_t newsize, PatchWriterInterface* patch,
+           SuffixArrayIndexInterface** sai_cache) {
+	size_t scsc, scan;
+	uint64_t pos=0;
+	size_t len;
+	size_t lastscan,lastpos,lastoffset;
+	uint64_t oldscore;
+	ssize_t s,Sf,lenf,Sb,lenb;
+	ssize_t overlap,Ss,lens;
+	ssize_t i;
 
-	if (I_cache && *I_cache) {
-		I = *I_cache;
+	std::unique_ptr<SuffixArrayIndexInterface> local_sai;
+	SuffixArrayIndexInterface* sai;
+
+	if (sai_cache && *sai_cache) {
+		sai = *sai_cache;
 	} else {
-		if ((I=static_cast<saidx_t*>(malloc((oldsize+1)*sizeof(saidx_t))))==NULL)
-			err(1,NULL);
+		local_sai = CreateSuffixArrayIndex(old_buf, oldsize);
+		if (!local_sai)
+			return 1;
+		sai = local_sai.get();
 
-		// Note: divsufsort() fails when the passed size is 0 and old_buf is NULL.
-		if (oldsize > 0 && divsufsort(old_buf, I, oldsize)) err(1, "divsufsort");
-		if (I_cache)
-			*I_cache = I;
+		// Transfer ownership to the caller.
+		if (sai_cache)
+			*sai_cache = local_sai.release();
 	}
 
 	/* Initialize the patch file encoder */
@@ -166,14 +133,14 @@ int bsdiff(const u_char* old_buf, off_t oldsize, const u_char* new_buf,
 		 * go past that block of data. We need to track the number of
 		 * times we're stuck in the block and break out of it. */
 		int num_less_than_eight = 0;
-		off_t prev_len, prev_oldscore, prev_pos;
+		size_t prev_len;
+		uint64_t prev_pos, prev_oldscore;
 		for(scsc=scan+=len;scan<newsize;scan++) {
 			prev_len=len;
 			prev_oldscore=oldscore;
 			prev_pos=pos;
 
-			len=search(I,old_buf,oldsize,new_buf+scan,newsize-scan,
-					0,oldsize-1,&pos);
+			sai->SearchPrefix(new_buf + scan, newsize - scan, &len, &pos);
 
 			for(;scsc<scan+len;scsc++)
 			if((scsc+lastoffset<oldsize) &&
@@ -187,7 +154,7 @@ int bsdiff(const u_char* old_buf, off_t oldsize, const u_char* new_buf,
 				(old_buf[scan+lastoffset] == new_buf[scan]))
 				oldscore--;
 
-			const off_t fuzz = 8;
+			const size_t fuzz = 8;
 			if (prev_len-fuzz<=len && len<=prev_len &&
 			    prev_oldscore-fuzz<=oldscore &&
 			    oldscore<=prev_oldscore &&
@@ -210,7 +177,7 @@ int bsdiff(const u_char* old_buf, off_t oldsize, const u_char* new_buf,
 			lenb=0;
 			if(scan<newsize) {
 				s=0;Sb=0;
-				for(i=1;(scan>=lastscan+i)&&(pos>=i);i++) {
+				for(i=1;(scan>=lastscan+i)&&(pos>=static_cast<uint64_t>(i));i++) {
 					if(old_buf[pos-i]==new_buf[scan-i]) s++;
 					if(s*2-i>Sb*2-lenb) { Sb=s; lenb=i; };
 				};
@@ -244,9 +211,6 @@ int bsdiff(const u_char* old_buf, off_t oldsize, const u_char* new_buf,
 	};
 	if (!diff_encoder.Close())
 		errx(1, "Closing the patch file");
-
-	if (I_cache == nullptr)
-		free(I);
 
 	return 0;
 }

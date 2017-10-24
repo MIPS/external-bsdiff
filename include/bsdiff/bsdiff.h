@@ -5,18 +5,11 @@
 #ifndef _BSDIFF_BSDIFF_H_
 #define _BSDIFF_BSDIFF_H_
 
-#include <sys/types.h>
-
-#if _FILE_OFFSET_BITS == 64
-#include "divsufsort64.h"
-#define saidx_t saidx64_t
-#define divsufsort divsufsort64
-#else
-#include "divsufsort.h"
-#endif
+#include <stdint.h>
 
 #include "bsdiff/common.h"
 #include "bsdiff/patch_writer_interface.h"
+#include "bsdiff/suffix_array_index_interface.h"
 
 namespace bsdiff {
 
@@ -32,20 +25,20 @@ int bsdiff(const char* old_filename,
 // |I_cache| can be used to cache the suffix array if the same |old_buf| is used
 // repeatedly, pass nullptr if not needed.
 BSDIFF_EXPORT
-int bsdiff(const u_char* old_buf,
-           off_t oldsize,
-           const u_char* new_buf,
-           off_t newsize,
+int bsdiff(const uint8_t* old_buf,
+           size_t oldsize,
+           const uint8_t* new_buf,
+           size_t newsize,
            const char* patch_filename,
-           saidx_t** I_cache);
+           SuffixArrayIndexInterface** sai_cache);
 
 BSDIFF_EXPORT
-int bsdiff(const u_char* old_buf,
-           off_t oldsize,
-           const u_char* new_buf,
-           off_t newsize,
+int bsdiff(const uint8_t* old_buf,
+           size_t oldsize,
+           const uint8_t* new_buf,
+           size_t newsize,
            PatchWriterInterface* patch,
-           saidx_t** I_cache);
+           SuffixArrayIndexInterface** sai_cache);
 
 }  // namespace bsdiff
 
