@@ -57,6 +57,7 @@
         'diff_encoder.cc',
         'patch_writer.cc',
         'split_patch_writer.cc',
+        'suffix_array_index.cc',
       ],
     },
     # bsdiff executable
@@ -133,6 +134,7 @@
             'extents_unittest.cc',
             'patch_writer_unittest.cc',
             'split_patch_writer_unittest.cc',
+            'suffix_array_index_unittest.cc',
             'test_utils.cc',
           ],
         },
