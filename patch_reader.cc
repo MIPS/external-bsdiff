@@ -8,16 +8,16 @@
 
 #include <limits>
 
+#include "bsdiff/brotli_decompressor.h"
 #include "bsdiff/bspatch.h"
 #include "bsdiff/bz2_decompressor.h"
+#include "bsdiff/constants.h"
 #include "bsdiff/logging.h"
 #include "bsdiff/utils.h"
 
 using std::endl;
 
 namespace bsdiff {
-
-const uint8_t kMagicHeader[] = "BSDIFF40";
 
 bool BsdiffPatchReader::Init(const uint8_t* patch_data, size_t patch_size) {
   // File format:
@@ -54,9 +54,9 @@ bool BsdiffPatchReader::Init(const uint8_t* patch_data, size_t patch_size) {
 
   // TODO(xunchang) set the correct decompressor based on the info in the
   // header.
-  ctrl_stream_.reset(new BZ2Decompressor());
-  diff_stream_.reset(new BZ2Decompressor());
-  extra_stream_.reset(new BZ2Decompressor());
+  ctrl_stream_ = CreateDecompressor(CompressorType::kBZ2);
+  diff_stream_ = CreateDecompressor(CompressorType::kBZ2);
+  extra_stream_ = CreateDecompressor(CompressorType::kBZ2);
 
   int64_t offset = 32;
   if (!ctrl_stream_->SetInputData(const_cast<uint8_t*>(patch_data) + offset,

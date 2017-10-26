@@ -16,8 +16,6 @@
 
 namespace bsdiff {
 
-extern const uint8_t kMagicHeader[];
-
 // A wrapper class to read and parse the data in a bsdiff patch. The reader
 // class contains the concatenated streams of control, diff, and extra data.
 // After initialization, this class provides the function to read the metadata

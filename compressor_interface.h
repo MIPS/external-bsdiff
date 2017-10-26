@@ -11,12 +11,9 @@
 #include <memory>
 #include <vector>
 
-namespace bsdiff {
+#include "bsdiff/constants.h"
 
-enum class CompressorType {
-  kBrotli,
-  kBZ2,
-};
+namespace bsdiff {
 
 class CompressorInterface {
  public:
