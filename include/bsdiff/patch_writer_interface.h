@@ -5,9 +5,8 @@
 #ifndef _BSDIFF_PATCH_WRITER_INTERFACE_H_
 #define _BSDIFF_PATCH_WRITER_INTERFACE_H_
 
+#include <stddef.h>
 #include <stdint.h>
-
-#include <cstddef>
 
 #include "bsdiff/control_entry.h"
 

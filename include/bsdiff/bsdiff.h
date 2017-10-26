@@ -5,6 +5,7 @@
 #ifndef _BSDIFF_BSDIFF_H_
 #define _BSDIFF_BSDIFF_H_
 
+#include <stddef.h>
 #include <stdint.h>
 
 #include "bsdiff/common.h"
