@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "bsdiff/patch_writer_interface.h"
 
@@ -16,6 +17,12 @@ namespace bsdiff {
 // using bz2 as a compressor.
 std::unique_ptr<PatchWriterInterface> CreateBsdiffPatchWriter(
     const std::string& patch_filename);
+
+// Create a patch writer compatible with Android Play Store bsdiff patches,
+// uncompressed. The data will be written to the passed |patch| vector, which
+// must be valid until Close() is called or this patch is destroyed.
+std::unique_ptr<PatchWriterInterface> CreateEndsleyPatchWriter(
+    std::vector<uint8_t>* patch);
 
 }  // namespace bsdiff
 
