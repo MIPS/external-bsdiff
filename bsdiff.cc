@@ -82,9 +82,9 @@ int bsdiff(const uint8_t* old_buf, size_t oldsize, const uint8_t* new_buf,
 	}
 
 	/* Initialize the patch file encoder */
-	if (!patch->Init())
-		return 1;
 	DiffEncoder diff_encoder(patch, old_buf, oldsize, new_buf, newsize);
+	if (!diff_encoder.Init())
+		return 1;
 
 	/* Compute the differences, writing ctrl as we go */
 	scan=0;len=0;

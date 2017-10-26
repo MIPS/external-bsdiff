@@ -21,6 +21,10 @@ const uint64_t kMaxEncodedUint64Value = (1ULL << 63) - 1;
 
 namespace bsdiff {
 
+bool DiffEncoder::Init() {
+  return patch_->Init(new_size_);
+}
+
 bool DiffEncoder::AddControlEntry(const ControlEntry& entry) {
   if (entry.diff_size > kMaxEncodedUint64Value) {
     LOG(ERROR) << "Encoding value out of range " << entry.diff_size << endl;

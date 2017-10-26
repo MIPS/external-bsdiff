@@ -27,7 +27,7 @@ void EncodeInt64(int64_t x, uint8_t* buf) {
 
 namespace bsdiff {
 
-bool BsdiffPatchWriter::Init() {
+bool BsdiffPatchWriter::Init(size_t /* new_size */) {
   fp_ = fopen(patch_filename_.c_str(), "w");
   if (!fp_) {
     LOG(ERROR) << "Opening " << patch_filename_ << endl;

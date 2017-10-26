@@ -20,7 +20,7 @@ namespace bsdiff {
 class DiffEncoder {
  public:
   // Initialize the DiffEncoder with the old and new file buffers, as well as
-  // the path writer used. The |patch| must be already initialized.
+  // the path writer used. The |patch| will be initialized when calling Init().
   DiffEncoder(PatchWriterInterface* patch,
               const uint8_t* old_buf,
               uint64_t old_size,
@@ -31,6 +31,9 @@ class DiffEncoder {
         old_size_(old_size),
         new_buf_(new_buf),
         new_size_(new_size) {}
+
+  // Initialize the diff encoder and the underlying patch.
+  bool Init();
 
   // Add a new control triplet entry to the patch. The |entry.diff_size| bytes
   // for the diff stream and the |entry.extra_size| bytes for the extra stream

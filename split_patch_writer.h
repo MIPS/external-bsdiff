@@ -33,7 +33,7 @@ class SplitPatchWriter : public PatchWriterInterface {
   // corresponding AddControlEntry() is not supported and will fail. The reason
   // for this is because which underlying patch takes the bytes depends on the
   // control entries.
-  bool Init() override;
+  bool Init(size_t new_size) override;
   bool WriteDiffStream(const uint8_t* data, size_t size) override;
   bool WriteExtraStream(const uint8_t* data, size_t size) override;
   bool AddControlEntry(const ControlEntry& entry) override;
@@ -52,6 +52,9 @@ class SplitPatchWriter : public PatchWriterInterface {
                      std::vector<size_t>* sizes_vector,
                      const uint8_t* data,
                      size_t size);
+
+  // The size of the new file for the patch we are writing.
+  size_t new_size_{0};
 
   // The size of each chunk of the new file written to.
   uint64_t new_chunk_size_;

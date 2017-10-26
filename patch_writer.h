@@ -23,7 +23,7 @@ class BsdiffPatchWriter : public PatchWriterInterface {
       : patch_filename_(patch_filename) {}
 
   // PatchWriterInterface overrides.
-  bool Init() override;
+  bool Init(size_t new_size) override;
   bool WriteDiffStream(const uint8_t* data, size_t size) override;
   bool WriteExtraStream(const uint8_t* data, size_t size) override;
   bool AddControlEntry(const ControlEntry& entry) override;

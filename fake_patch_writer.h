@@ -20,9 +20,10 @@ class FakePatchWriter : public PatchWriterInterface {
   ~FakePatchWriter() override = default;
 
   // PatchWriterInterface overrides.
-  bool Init() override {
+  bool Init(size_t new_size) override {
     EXPECT_FALSE(initialized_);
     initialized_ = true;
+    new_size_ = new_size;
     return true;
   }
 
@@ -53,12 +54,16 @@ class FakePatchWriter : public PatchWriterInterface {
   const std::vector<ControlEntry>& entries() const { return entries_; }
   const std::vector<uint8_t>& diff_stream() const { return diff_stream_; }
   const std::vector<uint8_t>& extra_stream() const { return extra_stream_; }
+  size_t new_size() const { return new_size_; }
 
  private:
   // The list of ControlEntry passed to this class.
   std::vector<ControlEntry> entries_;
   std::vector<uint8_t> diff_stream_;
   std::vector<uint8_t> extra_stream_;
+
+  // The size of the new file for the patch we are writing.
+  size_t new_size_{0};
 
   // Whether this class was initialized.
   bool initialized_{false};

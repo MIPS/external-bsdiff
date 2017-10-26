@@ -16,8 +16,9 @@ class PatchWriterInterface {
  public:
   virtual ~PatchWriterInterface() = default;
 
-  // Initialize the patch writer.
-  virtual bool Init() = 0;
+  // Initialize the patch writer for a patch where the new file will have
+  // |new_size| bytes.
+  virtual bool Init(size_t new_size) = 0;
 
   // Write the passed |data| buffer of length |size| to the Diff or Extra
   // streams respectively. Each method can be called independently from each
