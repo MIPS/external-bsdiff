@@ -18,9 +18,9 @@ namespace bsdiff {
 // the contents of the new file data, and won't necessarily be uniform.
 class SplitPatchWriter : public PatchWriterInterface {
  public:
-  // Create a PatchWriter using that will split in several patches where each
-  // one will write |new_chunk_size| bytes of new file data. Each patch will
-  // use the old file as a whole input file.
+  // Create a PatchWriter that will split the patch in several patches where
+  // each one will write |new_chunk_size| bytes of new file data. Each patch
+  // will use the old file as a whole input file.
   SplitPatchWriter(uint64_t new_chunk_size,
                    const std::vector<PatchWriterInterface*>& patches)
       : new_chunk_size_(new_chunk_size), patches_(patches) {
