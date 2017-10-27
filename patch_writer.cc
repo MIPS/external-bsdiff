@@ -6,6 +6,7 @@
 
 #include <string.h>
 
+#include "bsdiff/control_entry.h"
 #include "bsdiff/logging.h"
 
 using std::endl;
