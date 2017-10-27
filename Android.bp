@@ -15,7 +15,7 @@
 cc_defaults {
     name: "bsdiff_defaults",
     host_supported: true,
-    static_libs: ["libbz"],
+    static_libs: ["libbz", "libbrotli"],
     // Allow internal includes to be referenced with the "bsdiff/" prefix in the
     // path.
     include_dirs: ["external"],
@@ -58,8 +58,11 @@ cc_library_static {
     defaults: ["bsdiff_defaults"],
 
     srcs: [
+        "brotli_compressor.cc",
         "bsdiff.cc",
         "bz2_compressor.cc",
+        "compressor_buffer.cc",
+        "compressor_interface.cc",
         "diff_encoder.cc",
         "patch_writer.cc",
         "patch_writer_factory.cc",
@@ -69,6 +72,7 @@ cc_library_static {
     static_libs: [
         "libdivsufsort64",
         "libdivsufsort",
+        "libbrotli",
     ],
 }
 
@@ -81,6 +85,7 @@ cc_binary {
     static_libs: [
         "libbspatch",
         "libbz",
+        "libbrotli",
     ],
 }
 
@@ -95,6 +100,7 @@ cc_binary_host {
         "libdivsufsort64",
         "libdivsufsort",
         "libbz",
+        "libbrotli",
     ],
 }
 
@@ -104,6 +110,7 @@ cc_test {
     defaults: ["bsdiff_defaults"],
     test_suites: ["device-tests"],
     srcs: [
+        "brotli_compressor_unittest.cc",
         "bsdiff_unittest.cc",
         "bspatch_unittest.cc",
         "diff_encoder_unittest.cc",
@@ -123,6 +130,7 @@ cc_test {
         "libdivsufsort64",
         "libdivsufsort",
         "libbz",
+        "libbrotli",
     ],
     target: {
         android: {

@@ -6,6 +6,8 @@
 
 #include <string.h>
 
+#include "bsdiff/brotli_compressor.h"
+#include "bsdiff/bz2_compressor.h"
 #include "bsdiff/control_entry.h"
 #include "bsdiff/logging.h"
 
@@ -27,6 +29,14 @@ void EncodeInt64(int64_t x, uint8_t* buf) {
 
 namespace bsdiff {
 
+BsdiffPatchWriter::BsdiffPatchWriter(const std::string& patch_filename,
+                                     CompressorType type)
+    : patch_filename_(patch_filename) {
+  ctrl_stream_ = CreateCompressor(type);
+  diff_stream_ = CreateCompressor(type);
+  extra_stream_ = CreateCompressor(type);
+}
+
 bool BsdiffPatchWriter::Init(size_t /* new_size */) {
   fp_ = fopen(patch_filename_.c_str(), "w");
   if (!fp_) {
@@ -37,11 +47,11 @@ bool BsdiffPatchWriter::Init(size_t /* new_size */) {
 }
 
 bool BsdiffPatchWriter::WriteDiffStream(const uint8_t* data, size_t size) {
-  return diff_stream_.Write(data, size);
+  return diff_stream_->Write(data, size);
 }
 
 bool BsdiffPatchWriter::WriteExtraStream(const uint8_t* data, size_t size) {
-  return extra_stream_.Write(data, size);
+  return extra_stream_->Write(data, size);
 }
 
 bool BsdiffPatchWriter::AddControlEntry(const ControlEntry& entry) {
@@ -50,7 +60,7 @@ bool BsdiffPatchWriter::AddControlEntry(const ControlEntry& entry) {
   EncodeInt64(entry.diff_size, buf);
   EncodeInt64(entry.extra_size, buf + 8);
   EncodeInt64(entry.offset_increment, buf + 16);
-  if (!ctrl_stream_.Write(buf, sizeof(buf)))
+  if (!ctrl_stream_->Write(buf, sizeof(buf)))
     return false;
   written_output_ += entry.diff_size + entry.extra_size;
   return true;
@@ -62,15 +72,15 @@ bool BsdiffPatchWriter::Close() {
     return false;
   }
 
-  if (!ctrl_stream_.Finish() || !diff_stream_.Finish() ||
-      !extra_stream_.Finish()) {
+  if (!ctrl_stream_->Finish() || !diff_stream_->Finish() ||
+      !extra_stream_->Finish()) {
     LOG(ERROR) << "Finalizing compressed streams." << endl;
     return false;
   }
 
-  auto ctrl_data = ctrl_stream_.GetCompressedData();
-  auto diff_data = diff_stream_.GetCompressedData();
-  auto extra_data = extra_stream_.GetCompressedData();
+  auto ctrl_data = ctrl_stream_->GetCompressedData();
+  auto diff_data = diff_stream_->GetCompressedData();
+  auto extra_data = extra_stream_->GetCompressedData();
 
   if (!WriteHeader(ctrl_data.size(), diff_data.size()))
     return false;

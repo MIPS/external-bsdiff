@@ -5,10 +5,11 @@
 #ifndef _BSDIFF_PATCH_WRITER_H_
 #define _BSDIFF_PATCH_WRITER_H_
 
+#include <memory>
 #include <string>
 #include <vector>
 
-#include "bsdiff/bz2_compressor.h"
+#include "bsdiff/compressor_interface.h"
 #include "bsdiff/patch_writer_interface.h"
 
 namespace bsdiff {
@@ -17,10 +18,9 @@ namespace bsdiff {
 // BZ2-compressors and a 32-byte header.
 class BsdiffPatchWriter : public PatchWriterInterface {
  public:
-  // Create the patch writer using the file |patch_filename| where the patch
-  // data will be written to.
-  explicit BsdiffPatchWriter(const std::string& patch_filename)
-      : patch_filename_(patch_filename) {}
+  // Create the patch writer using |type| as the compression algorithm and the
+  // file |patch_filename| to write the patch data.
+  BsdiffPatchWriter(const std::string& patch_filename, CompressorType type);
 
   // PatchWriterInterface overrides.
   bool Init(size_t new_size) override;
@@ -43,9 +43,9 @@ class BsdiffPatchWriter : public PatchWriterInterface {
   std::string patch_filename_;
 
   // The three internal compressed streams.
-  BZ2Compressor ctrl_stream_;
-  BZ2Compressor diff_stream_;
-  BZ2Compressor extra_stream_;
+  std::unique_ptr<CompressorInterface> ctrl_stream_{nullptr};
+  std::unique_ptr<CompressorInterface> diff_stream_{nullptr};
+  std::unique_ptr<CompressorInterface> extra_stream_{nullptr};
 };
 
 }  // namespace bsdiff
