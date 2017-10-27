@@ -59,6 +59,7 @@
         'bz2_compressor.cc',
         'diff_encoder.cc',
         'patch_writer.cc',
+        'patch_writer_factory.cc',
         'split_patch_writer.cc',
         'suffix_array_index.cc',
       ],

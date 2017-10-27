@@ -10,6 +10,7 @@
 // this index can vary on technical details, such as the size of the internal
 // suffix array elements, which are not visible in this interface.
 
+#include <stddef.h>
 #include <stdint.h>
 
 namespace bsdiff {

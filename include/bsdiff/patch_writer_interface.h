@@ -5,9 +5,8 @@
 #ifndef _BSDIFF_PATCH_WRITER_INTERFACE_H_
 #define _BSDIFF_PATCH_WRITER_INTERFACE_H_
 
+#include <stddef.h>
 #include <stdint.h>
-
-#include <cstddef>
 
 #include "bsdiff/control_entry.h"
 
@@ -17,8 +16,9 @@ class PatchWriterInterface {
  public:
   virtual ~PatchWriterInterface() = default;
 
-  // Initialize the patch writer.
-  virtual bool Init() = 0;
+  // Initialize the patch writer for a patch where the new file will have
+  // |new_size| bytes.
+  virtual bool Init(size_t new_size) = 0;
 
   // Write the passed |data| buffer of length |size| to the Diff or Extra
   // streams respectively. Each method can be called independently from each

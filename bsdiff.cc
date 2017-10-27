@@ -33,11 +33,7 @@ __FBSDID("$FreeBSD: src/usr.bin/bsdiff/bsdiff/bsdiff.c,v 1.1 2005/08/06 01:59:05
 #include <sys/types.h>
 
 #include <err.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
 #include <algorithm>
 
@@ -46,38 +42,6 @@ __FBSDID("$FreeBSD: src/usr.bin/bsdiff/bsdiff/bsdiff.c,v 1.1 2005/08/06 01:59:05
 #include "bsdiff/suffix_array_index.h"
 
 namespace bsdiff {
-
-int bsdiff(const char* old_filename, const char* new_filename,
-           const char* patch_filename) {
-	int fd;
-	uint8_t *old_buf,*new_buf;
-	ssize_t oldsize,newsize;
-
-	/* Allocate oldsize+1 bytes instead of oldsize bytes to ensure
-		that we never try to malloc(0) and get a NULL pointer */
-	if(((fd=open(old_filename,O_RDONLY,0))<0) ||
-		((oldsize=lseek(fd,0,SEEK_END))==-1) ||
-		((old_buf=static_cast<uint8_t*>(malloc(oldsize+1)))==NULL) ||
-		(lseek(fd,0,SEEK_SET)!=0) ||
-		(read(fd,old_buf,oldsize)!=oldsize) ||
-		(close(fd)==-1)) err(1,"%s",old_filename);
-
-	/* Allocate newsize+1 bytes instead of newsize bytes to ensure
-		that we never try to malloc(0) and get a NULL pointer */
-	if(((fd=open(new_filename,O_RDONLY,0))<0) ||
-		((newsize=lseek(fd,0,SEEK_END))==-1) ||
-		((new_buf = static_cast<uint8_t*>(malloc(newsize+1)))==NULL) ||
-		(lseek(fd,0,SEEK_SET)!=0) ||
-		(read(fd,new_buf,newsize)!=newsize) ||
-		(close(fd)==-1)) err(1,"%s",new_filename);
-
-	int ret = bsdiff(old_buf, oldsize, new_buf, newsize, patch_filename, nullptr);
-
-	free(old_buf);
-	free(new_buf);
-
-	return ret;
-}
 
 // TODO(deymo): Deprecate this version of the interface and move all callers
 // to the underlying version using PatchWriterInterface instead. This allows
@@ -118,9 +82,9 @@ int bsdiff(const uint8_t* old_buf, size_t oldsize, const uint8_t* new_buf,
 	}
 
 	/* Initialize the patch file encoder */
-	if (!patch->Init())
-		return 1;
 	DiffEncoder diff_encoder(patch, old_buf, oldsize, new_buf, newsize);
+	if (!diff_encoder.Init())
+		return 1;
 
 	/* Compute the differences, writing ctrl as we go */
 	scan=0;len=0;

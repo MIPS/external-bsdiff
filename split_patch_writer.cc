@@ -12,12 +12,24 @@ using std::endl;
 
 namespace bsdiff {
 
-bool SplitPatchWriter::Init() {
+bool SplitPatchWriter::Init(size_t new_size) {
+  new_size_ = new_size;
   // Fail gracefully if re-initialized.
   if (current_patch_ || patches_.empty())
     return false;
 
-  return patches_[0]->Init();
+  size_t expected_patches = (new_size_ + new_chunk_size_ - 1) / new_chunk_size_;
+  if (expected_patches == 0)
+    expected_patches = 1;
+  if (expected_patches != patches_.size()) {
+    LOG(ERROR) << "Expected " << expected_patches << " for a new file of size "
+               << new_size_ << " split in chunks of " << new_chunk_size_
+               << " but got " << patches_.size() << " instead." << endl;
+    return false;
+  }
+
+  return patches_[0]->Init(
+      std::min(static_cast<uint64_t>(new_size_), new_chunk_size_));
 }
 
 bool SplitPatchWriter::WriteDiffStream(const uint8_t* data, size_t size) {
@@ -61,7 +73,8 @@ bool SplitPatchWriter::AddControlEntry(const ControlEntry& entry) {
         LOG(ERROR) << "Writing past the last patch" << endl;
         return false;
       }
-      if (!patches_[current_patch_]->Init()) {
+      if (!patches_[current_patch_]->Init(std::min(
+              new_size_ - current_patch_ * new_chunk_size_, new_chunk_size_))) {
         LOG(ERROR) << "Failed to initialize patch " << current_patch_ << endl;
         return false;
       }

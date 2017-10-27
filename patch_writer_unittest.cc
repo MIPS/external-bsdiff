@@ -46,7 +46,11 @@ namespace bsdiff {
 
 class BsdiffPatchWriterTest : public testing::Test {
  protected:
-  void SetUp() override { EXPECT_TRUE(patch_writer_.Init()); }
+  void SetUp() override {
+    // This patch writer doesn't use the |new_size| value passed on init, so we
+    // don't pass any meaningful value.
+    EXPECT_TRUE(patch_writer_.Init(0));
+  }
 
   test_utils::ScopedTempFile patch_file_{"bsdiff_newfile.XXXXXX"};
   BsdiffPatchWriter patch_writer_{patch_file_.filename()};

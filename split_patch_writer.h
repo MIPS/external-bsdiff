@@ -18,9 +18,9 @@ namespace bsdiff {
 // the contents of the new file data, and won't necessarily be uniform.
 class SplitPatchWriter : public PatchWriterInterface {
  public:
-  // Create a PatchWriter using that will split in several patches where each
-  // one will write |new_chunk_size| bytes of new file data. Each patch will
-  // use the old file as a whole input file.
+  // Create a PatchWriter that will split the patch in several patches where
+  // each one will write |new_chunk_size| bytes of new file data. Each patch
+  // will use the old file as a whole input file.
   SplitPatchWriter(uint64_t new_chunk_size,
                    const std::vector<PatchWriterInterface*>& patches)
       : new_chunk_size_(new_chunk_size), patches_(patches) {
@@ -33,7 +33,7 @@ class SplitPatchWriter : public PatchWriterInterface {
   // corresponding AddControlEntry() is not supported and will fail. The reason
   // for this is because which underlying patch takes the bytes depends on the
   // control entries.
-  bool Init() override;
+  bool Init(size_t new_size) override;
   bool WriteDiffStream(const uint8_t* data, size_t size) override;
   bool WriteExtraStream(const uint8_t* data, size_t size) override;
   bool AddControlEntry(const ControlEntry& entry) override;
@@ -52,6 +52,9 @@ class SplitPatchWriter : public PatchWriterInterface {
                      std::vector<size_t>* sizes_vector,
                      const uint8_t* data,
                      size_t size);
+
+  // The size of the new file for the patch we are writing.
+  size_t new_size_{0};
 
   // The size of each chunk of the new file written to.
   uint64_t new_chunk_size_;

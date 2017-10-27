@@ -5,7 +5,8 @@
 #ifndef _BSDIFF_EXTENTS_FILE_H_
 #define _BSDIFF_EXTENTS_FILE_H_
 
-#include <stdio.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #include <memory>
 #include <vector>

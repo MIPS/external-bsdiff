@@ -11,7 +11,6 @@
 #include <utility>
 #include <vector>
 
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace bsdiff {

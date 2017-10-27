@@ -5,6 +5,9 @@
 #ifndef _BSDIFF_BSPATCH_H_
 #define _BSDIFF_BSPATCH_H_
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include <functional>
 #include <memory>
 #include <vector>
