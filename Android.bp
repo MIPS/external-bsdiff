@@ -19,12 +19,7 @@ cc_defaults {
     // Allow internal includes to be referenced with the "bsdiff/" prefix in the
     // path.
     include_dirs: ["external"],
-    export_include_dirs: [
-        "include",
-        // TODO(deymo): Remove include/bsdiff when all callers use the "bsdiff/"
-        // prefix when including code.
-        "include/bsdiff",
-    ],
+    export_include_dirs: ["include"],
     cflags: [
         "-D_FILE_OFFSET_BITS=64",
         "-Wall",
