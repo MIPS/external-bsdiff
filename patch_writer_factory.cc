@@ -8,10 +8,11 @@
 
 namespace bsdiff {
 
+// TODO(xunchang) choose the compression type based on the input parameter.
 std::unique_ptr<PatchWriterInterface> CreateBsdiffPatchWriter(
     const std::string& patch_filename) {
   return std::unique_ptr<PatchWriterInterface>(
-      new BsdiffPatchWriter(patch_filename));
+      new BsdiffPatchWriter(patch_filename, CompressorType::kBZ2));
 }
 
 }  // namespace bsdiff
