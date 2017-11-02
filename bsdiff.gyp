@@ -50,13 +50,17 @@
       'link_settings': {
         'libraries': [
           '-lbz2',
+          '-lbrotlienc',
           '-ldivsufsort',
           '-ldivsufsort64',
         ],
       },
       'sources': [
+        'brotli_compressor.cc',
         'bsdiff.cc',
         'bz2_compressor.cc',
+        'compressor_buffer.cc',
+        'compressor_interface.cc',
         'diff_encoder.cc',
         'patch_writer.cc',
         'patch_writer_factory.cc',
@@ -82,6 +86,7 @@
       'link_settings': {
         'libraries': [
           '-lbz2',
+          '-lbrotlidec',
         ],
       },
       'sources': [
@@ -131,6 +136,7 @@
           },
           'includes': ['../common-mk/common_test.gypi'],
           'sources': [
+            'brotli_compressor_unittest.cc',
             'bsdiff_unittest.cc',
             'bspatch_unittest.cc',
             'diff_encoder_unittest.cc',

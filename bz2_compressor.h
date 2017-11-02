@@ -10,6 +10,9 @@
 
 #include <vector>
 
+#include "bsdiff/compressor_buffer.h"
+#include "bsdiff/compressor_interface.h"
+
 namespace bsdiff {
 
 // An in-memory class to wrap the low-level bzip2 compress functions. This class
@@ -17,19 +20,15 @@ namespace bsdiff {
 // data at the end of the compression step. For that, all the compressed data
 // is stored in memory.
 
-class BZ2Compressor {
+class BZ2Compressor : public CompressorInterface {
  public:
   BZ2Compressor();
-  ~BZ2Compressor();
+  ~BZ2Compressor() override;
 
-  // Compress and write the data at |buf| of size |size|.
-  bool Write(const uint8_t* buf, size_t size);
-
-  // Finish the compression step.
-  bool Finish();
-
-  // Return the compressed data. This method must be only called after Finish().
-  const std::vector<uint8_t>& GetCompressedData();
+  // CompressorInterface overrides.
+  bool Write(const uint8_t* buf, size_t size) override;
+  bool Finish() override;
+  const std::vector<uint8_t>& GetCompressedData() override;
 
  private:
   // The low-level bzip2 stream.
@@ -38,16 +37,7 @@ class BZ2Compressor {
   // Whether the bz_strm_ is initialized.
   bool bz_strm_initialized_{false};
 
-  // A list of chunks of compressed data. The final compressed representation is
-  // the concatenation of all the compressed data.
-  std::vector<std::vector<uint8_t>> comp_chunks_;
-
-  // A concatenated version of the |comp_chunks_|, used to store the compressed
-  // memory after Finish() is called.
-  std::vector<uint8_t> comp_data_;
-
-  // A temporary compression buffer for multiple calls to Write().
-  std::vector<uint8_t> comp_buffer_;
+  CompressorBuffer comp_buffer_;
 };
 
 }  // namespace bsdiff

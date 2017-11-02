@@ -33,8 +33,11 @@ clean:
 ### List of source files for each project. Keep in sync with the Android.mk.
 # "bsdiff" program.
 bsdiff_src_files := \
+    brotli_compressor.cc \
     bsdiff.cc \
     bz2_compressor.cc \
+    compressor_buffer.cc \
+    compressor_interface.cc \
     diff_encoder.cc \
     patch_writer.cc \
     patch_writer_factory.cc \
@@ -56,6 +59,7 @@ bspatch_src_files := \
 
 # Unit test files.
 bsdiff_common_unittests := \
+    brotli_compressor_unittest.cc \
     bsdiff_unittest.cc \
     bspatch_unittest.cc \
     diff_encoder_unittest.cc \
@@ -69,10 +73,10 @@ bsdiff_common_unittests := \
     testrunner.cc
 
 
-BSDIFF_LIBS := -lbz2 -ldivsufsort -ldivsufsort64
+BSDIFF_LIBS := -lbz2 -lbrotlienc -ldivsufsort -ldivsufsort64
 BSDIFF_OBJS := $(bsdiff_src_files:.cc=.o)
 
-BSPATCH_LIBS := -lbz2
+BSPATCH_LIBS := -lbz2 -lbrotlidec
 BSPATCH_OBJS := $(bspatch_src_files:.cc=.o)
 
 UNITTEST_LIBS = -lgmock -lgtest -lpthread
