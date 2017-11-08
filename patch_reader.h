@@ -30,7 +30,7 @@ class BsdiffPatchReader {
 
   // Initialize the control stream, diff stream and extra stream from the
   // corresponding offset of |patch_data|.
-  bool Init(const uint8_t* data_start, size_t patch_size);
+  bool Init(const uint8_t* patch_data, size_t patch_size);
 
   // Read the control stream and parse the metadata of |diff_size_|,
   // |extra_size_| and |offset_incremental_|.
