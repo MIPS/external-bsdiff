@@ -32,6 +32,9 @@ TEST(BsdiffArgumentsTest, ParseBsdiffFormatTest) {
   EXPECT_TRUE(BsdiffArguments::ParseBsdiffFormat("bsdiff40", &format));
   EXPECT_EQ(BsdiffFormat::kLegacy, format);
 
+  EXPECT_TRUE(BsdiffArguments::ParseBsdiffFormat("endsley", &format));
+  EXPECT_EQ(BsdiffFormat::kEndsley, format);
+
   EXPECT_FALSE(BsdiffArguments::ParseBsdiffFormat("Other", &format));
 }
 

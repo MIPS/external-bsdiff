@@ -74,12 +74,18 @@ int GenerateBsdiffFromFiles(const char* old_filename,
   }
 
   std::unique_ptr<bsdiff::PatchWriterInterface> patch_writer;
+  std::vector<uint8_t> raw_data;
+
   if (arguments.format() == bsdiff::BsdiffFormat::kLegacy) {
     patch_writer = bsdiff::CreateBsdiffPatchWriter(patch_filename);
   } else if (arguments.format() == bsdiff::BsdiffFormat::kBsdf2) {
     patch_writer = bsdiff::CreateBSDF2PatchWriter(
         patch_filename, arguments.compressor_type(),
         arguments.compression_quality());
+  } else if (arguments.format() == bsdiff::BsdiffFormat::kEndsley) {
+    patch_writer =
+        bsdiff::CreateEndsleyPatchWriter(&raw_data, arguments.compressor_type(),
+                                         arguments.compression_quality());
   } else {
     std::cerr << "unexpected bsdiff format." << std::endl;
     return 1;
@@ -91,20 +97,33 @@ int GenerateBsdiffFromFiles(const char* old_filename,
   munmap(old_buf, oldsize);
   munmap(new_buf, newsize);
 
+  if (!ret && arguments.format() == bsdiff::BsdiffFormat::kEndsley) {
+    // Store the raw_data on disk.
+    FILE* fp = fopen(patch_filename, "wb");
+    if (!fp) {
+      perror("Opening the patch file");
+      return 1;
+    }
+    if (raw_data.size() != fwrite(raw_data.data(), 1, raw_data.size(), fp)) {
+      perror("Writing to the patch file");
+      ret = 1;
+    }
+    fclose(fp);
+  }
   return ret;
 }
 
 void PrintUsage(const std::string& proc_name) {
   std::cerr << "usage: " << proc_name
             << " [options] oldfile newfile patchfile\n";
-  std::cerr << "  --format <legacy|bsdiff40|bsdf2>  The format of the bsdiff"
-               " patch.\n"
-            << "  --minlen LEN             The minimum match length required "
-               "to consider a match in the algorithm.\n"
-            << "  --type <bz2|brotli>      The algorithm to compress the "
-               "patch, bsdf2 format only.\n"
-            << "  --quality                Quality of the patch compression,"
-               " brotli only.\n";
+  std::cerr << "  --format <legacy|bsdiff40|bsdf2|endsley>  The format of the"
+               " bsdiff patch.\n"
+            << "  --minlen LEN                       The minimum match length "
+               "required to consider a match in the algorithm.\n"
+            << "  --type <bz2|brotli|nocompression>  The algorithm to compress "
+               "the patch, bsdf2 format only.\n"
+            << "  --quality                          Quality of the patch "
+               "compression, brotli only.\n";
 }
 
 }  // namespace

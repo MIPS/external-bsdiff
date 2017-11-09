@@ -15,6 +15,7 @@ namespace bsdiff {
 enum class BsdiffFormat {
   kLegacy,
   kBsdf2,
+  kEndsley,
 };
 
 class PatchWriterInterface {
