@@ -49,7 +49,7 @@ namespace bsdiff {
 int bsdiff(const uint8_t* old_buf, size_t oldsize, const uint8_t* new_buf,
            size_t newsize, const char* patch_filename,
            SuffixArrayIndexInterface** sai_cache) {
-	BsdiffPatchWriter patch(patch_filename, CompressorType::kBZ2);
+	BsdiffPatchWriter patch(patch_filename, BsdiffFormat::kLegacy);
 	return bsdiff(old_buf, oldsize, new_buf, newsize, &patch, sai_cache);
 }
 

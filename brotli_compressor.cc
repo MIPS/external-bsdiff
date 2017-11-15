@@ -12,7 +12,7 @@ namespace {
 // TODO(xunchang) set brotli compression parameters based on input options.
 const size_t kBufferSize = 1024 * 1024;
 const uint32_t kBrotliQuality = 11;
-const uint32_t kBrotliLgwin = 24;
+const uint32_t kBrotliLgwin = 20;
 
 }  // namespace
 

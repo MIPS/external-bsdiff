@@ -13,6 +13,7 @@
 
 #include "bsdiff/compressor_buffer.h"
 #include "bsdiff/compressor_interface.h"
+#include "bsdiff/constants.h"
 
 namespace bsdiff {
 
@@ -25,6 +26,7 @@ class BrotliCompressor : public CompressorInterface {
   bool Write(const uint8_t* buf, size_t size) override;
   bool Finish() override;
   const std::vector<uint8_t>& GetCompressedData() override;
+  CompressorType Type() override { return CompressorType::kBrotli; }
 
  private:
   BrotliEncoderState* brotli_encoder_state_;
