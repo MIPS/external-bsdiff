@@ -28,6 +28,9 @@ class CompressorInterface {
   // Return the compressed data. This method must be only called after Finish().
   virtual const std::vector<uint8_t>& GetCompressedData() = 0;
 
+  // Return the type of the current compressor.
+  virtual CompressorType Type() = 0;
+
  protected:
   CompressorInterface() = default;
 };
