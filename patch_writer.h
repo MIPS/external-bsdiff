@@ -20,7 +20,7 @@ class BsdiffPatchWriter : public PatchWriterInterface {
  public:
   // Create the patch writer using |type| as the compression algorithm and the
   // file |patch_filename| to write the patch data.
-  BsdiffPatchWriter(const std::string& patch_filename, CompressorType type);
+  BsdiffPatchWriter(const std::string& patch_filename, BsdiffFormat format);
 
   // PatchWriterInterface overrides.
   bool Init(size_t new_size) override;
@@ -41,6 +41,9 @@ class BsdiffPatchWriter : public PatchWriterInterface {
   // The current file we are writing to.
   FILE* fp_{nullptr};
   std::string patch_filename_;
+
+  // The format of bsdiff we're using.
+  BsdiffFormat format_;
 
   // The three internal compressed streams.
   std::unique_ptr<CompressorInterface> ctrl_stream_{nullptr};

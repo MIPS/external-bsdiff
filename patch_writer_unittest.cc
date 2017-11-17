@@ -53,7 +53,8 @@ class BsdiffPatchWriterTest : public testing::Test {
   }
 
   test_utils::ScopedTempFile patch_file_{"bsdiff_newfile.XXXXXX"};
-  BsdiffPatchWriter patch_writer_{patch_file_.filename(), CompressorType::kBZ2};
+  BsdiffPatchWriter patch_writer_{patch_file_.filename(),
+                                  BsdiffFormat::kLegacy};
 };
 
 TEST_F(BsdiffPatchWriterTest, CreateEmptyPatchTest) {

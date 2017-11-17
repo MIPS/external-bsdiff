@@ -12,6 +12,11 @@
 
 namespace bsdiff {
 
+enum class BsdiffFormat {
+  kLegacy,
+  kBsdf2,
+};
+
 class PatchWriterInterface {
  public:
   virtual ~PatchWriterInterface() = default;

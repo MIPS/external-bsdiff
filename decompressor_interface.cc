@@ -6,15 +6,21 @@
 
 #include "bsdiff/brotli_decompressor.h"
 #include "bsdiff/bz2_decompressor.h"
+#include "bsdiff/logging.h"
 
 namespace bsdiff {
 
 std::unique_ptr<DecompressorInterface> CreateDecompressor(CompressorType type) {
-  if (type == CompressorType::kBrotli) {
-    return std::unique_ptr<DecompressorInterface>(new BrotliDecompressor());
+  switch (type) {
+    case CompressorType::kBZ2:
+      return std::unique_ptr<DecompressorInterface>(new BZ2Decompressor());
+    case CompressorType::kBrotli:
+      return std::unique_ptr<DecompressorInterface>(new BrotliDecompressor());
+    default:
+      LOG(ERROR) << "unsupported compressor type: "
+                 << static_cast<uint8_t>(type) << std::endl;
+      return nullptr;
   }
-  // Use BZ2 as a default decompressor.
-  return std::unique_ptr<DecompressorInterface>(new BZ2Decompressor());
 }
 
 }  // namespace bsdiff
