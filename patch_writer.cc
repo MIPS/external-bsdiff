@@ -8,14 +8,13 @@
 
 #include "bsdiff/brotli_compressor.h"
 #include "bsdiff/bz2_compressor.h"
+#include "bsdiff/constants.h"
 #include "bsdiff/control_entry.h"
 #include "bsdiff/logging.h"
 
 using std::endl;
 
 namespace {
-
-constexpr uint8_t kMagicHeader[] = "BSDIFF40";
 
 void EncodeInt64(int64_t x, uint8_t* buf) {
   uint64_t y = x < 0 ? (1ULL << 63ULL) - x : x;

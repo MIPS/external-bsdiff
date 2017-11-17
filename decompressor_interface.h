@@ -8,6 +8,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <memory>
+
+#include "bsdiff/constants.h"
+
 namespace bsdiff {
 
 class DecompressorInterface {
@@ -27,6 +31,8 @@ class DecompressorInterface {
   // Close the decompression stream.
   virtual bool Close() = 0;
 };
+
+std::unique_ptr<DecompressorInterface> CreateDecompressor(CompressorType type);
 
 }  // namespace bsdiff
 #endif  // _BSDIFF_DECOMPRESSOR_INTERFACE_H_
