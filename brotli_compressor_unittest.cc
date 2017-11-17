@@ -6,9 +6,11 @@
 
 #include <gtest/gtest.h>
 
+#include "bsdiff/brotli_decompressor.h"
+
 namespace {
 
-const uint8_t kHelloWorld[] = {
+constexpr uint8_t kHelloWorld[] = {
     0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x57, 0x6f, 0x72, 0x6c, 0x64, 0x0a,
 };
 }  // namespace
@@ -22,8 +24,17 @@ TEST(BrotliCompressorTest, BrotliCompressorSmoke) {
   std::vector<uint8_t> compressed_data = brotli_compressor.GetCompressedData();
   EXPECT_GT(compressed_data.size(), static_cast<size_t>(0));
 
-  // TODO(xunchang) run brotli decompressor and check we can get back
-  // kHelloWorld.
+  // Run decompressor and check we can get the exact same data as kHelloWorld.
+  std::vector<uint8_t> decompressed_data(sizeof(kHelloWorld));
+  BrotliDecompressor brotli_decompressor;
+  EXPECT_TRUE(brotli_decompressor.SetInputData(compressed_data.data(),
+                                               compressed_data.size()));
+  EXPECT_TRUE(
+      brotli_decompressor.Read(decompressed_data.data(), sizeof(kHelloWorld)));
+  EXPECT_TRUE(brotli_decompressor.Close());
+  EXPECT_EQ(
+      std::vector<uint8_t>(kHelloWorld, kHelloWorld + sizeof(kHelloWorld)),
+      decompressed_data);
 }
 
 }  // namespace bsdiff

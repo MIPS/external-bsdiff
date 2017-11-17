@@ -93,9 +93,11 @@
         },
       },
       'sources': [
+        'brotli_decompressor.cc',
         'bspatch.cc',
         'buffer_file.cc',
         'bz2_decompressor.cc',
+        'decompressor_interface.cc',
         'extents.cc',
         'extents_file.cc',
         'file.cc',

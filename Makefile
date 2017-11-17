@@ -47,9 +47,11 @@ bsdiff_src_files := \
 
 # "bspatch" program.
 bspatch_src_files := \
+    brotli_decompressor.cc \
     bspatch.cc \
     bz2_decompressor.cc \
     buffer_file.cc \
+    decompressor_interface.cc \
     extents.cc \
     extents_file.cc \
     file.cc \
