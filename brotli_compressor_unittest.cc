@@ -37,4 +37,19 @@ TEST(BrotliCompressorTest, BrotliCompressorSmoke) {
       decompressed_data);
 }
 
+TEST(BrotliCompressorTest, BrotliCompressorEmptyStream) {
+  uint8_t empty_buffer[] = {};
+  BrotliCompressor brotli_compressor;
+  EXPECT_TRUE(brotli_compressor.Write(empty_buffer, sizeof(empty_buffer)));
+  EXPECT_TRUE(brotli_compressor.Finish());
+
+  std::vector<uint8_t> compressed_data = brotli_compressor.GetCompressedData();
+
+  // Check that we can close the decompressor without errors.
+  BrotliDecompressor brotli_decompressor;
+  EXPECT_TRUE(brotli_decompressor.SetInputData(compressed_data.data(),
+                                               compressed_data.size()));
+  EXPECT_TRUE(brotli_decompressor.Close());
+}
+
 }  // namespace bsdiff
