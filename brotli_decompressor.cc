@@ -49,7 +49,12 @@ bool BrotliDecompressor::Read(uint8_t* output_data, size_t bytes_to_output) {
 }
 
 bool BrotliDecompressor::Close() {
-  if (!BrotliDecoderIsFinished(brotli_decoder_state_)) {
+  // In some cases, the brotli compressed stream could be empty. As a result,
+  // the function BrotliDecoderIsFinished() will return false because we never
+  // start the decompression. When that happens, we just destroy the decoder
+  // and return true.
+  if (BrotliDecoderIsUsed(brotli_decoder_state_) &&
+      !BrotliDecoderIsFinished(brotli_decoder_state_)) {
     LOG(ERROR) << "Unfinished brotli decoder." << endl;
     return false;
   }

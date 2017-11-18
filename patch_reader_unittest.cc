@@ -72,7 +72,6 @@ class PatchReaderTest : public testing::Test {
               std::back_inserter(*patch_data));
   }
 
-
   void VerifyPatch(const std::vector<uint8_t>& patch_data) {
     BsdiffPatchReader patch_reader;
     EXPECT_TRUE(patch_reader.Init(patch_data.data(), patch_data.size()));
@@ -108,7 +107,7 @@ class PatchReaderTest : public testing::Test {
   std::unique_ptr<CompressorInterface> extra_stream_{nullptr};
 };
 
-TEST_F(PatchReaderTest, BZ2PatchReaderLegacyFormatSmoke) {
+TEST_F(PatchReaderTest, PatchReaderLegacyFormatSmoke) {
   ctrl_stream_.reset(new BZ2Compressor());
   diff_stream_.reset(new BZ2Compressor());
   extra_stream_.reset(new BZ2Compressor());
@@ -123,7 +122,7 @@ TEST_F(PatchReaderTest, BZ2PatchReaderLegacyFormatSmoke) {
   VerifyPatch(patch_data);
 }
 
-TEST_F(PatchReaderTest, BZ2PatchReaderNewFormatSmoke) {
+TEST_F(PatchReaderTest, PatchReaderNewFormatSmoke) {
   // Compress the data with one bz2 and two brotli compressors.
   ctrl_stream_.reset(new BZ2Compressor());
   diff_stream_.reset(new BrotliCompressor());
