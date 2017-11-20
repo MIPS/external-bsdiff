@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "bsdiff/common.h"
+#include "bsdiff/constants.h"
 #include "bsdiff/patch_writer_interface.h"
 
 namespace bsdiff {
@@ -19,6 +20,14 @@ namespace bsdiff {
 BSDIFF_EXPORT
 std::unique_ptr<PatchWriterInterface> CreateBsdiffPatchWriter(
     const std::string& patch_filename);
+
+// Create a patch writer using the "BSDF2" patch format. It uses the compressor
+// specified in |type| with compression quality |quality|.
+BSDIFF_EXPORT
+std::unique_ptr<PatchWriterInterface> CreateBSDF2PatchWriter(
+    const std::string& patch_filename,
+    CompressorType type,
+    int quality);
 
 // Create a patch writer compatible with Android Play Store bsdiff patches,
 // uncompressed. The data will be written to the passed |patch| vector, which

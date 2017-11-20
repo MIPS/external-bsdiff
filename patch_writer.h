@@ -14,13 +14,20 @@
 
 namespace bsdiff {
 
-// A PatchWriterInterface class using the upstream's BSDIFF40 format: three
-// BZ2-compressors and a 32-byte header.
+// A PatchWriterInterface class with three compressors and a 32-byte header.
 class BsdiffPatchWriter : public PatchWriterInterface {
  public:
-  // Create the patch writer using |type| as the compression algorithm and the
-  // file |patch_filename| to write the patch data.
-  BsdiffPatchWriter(const std::string& patch_filename, BsdiffFormat format);
+  // Create the patch writer using the upstream's "BSDIFF40" format. It uses
+  // bz2 as the compression algorithm and the file |patch_filename| to write
+  // the patch data.
+  explicit BsdiffPatchWriter(const std::string& patch_filename);
+
+  // Create the patch writer using the "BSDF2" format. It uses the compressor
+  // with algorithm |type| and quality |quality|. This writer also writes the
+  // patch data to the file |patch_filename|.
+  BsdiffPatchWriter(const std::string& patch_filename,
+                    CompressorType type,
+                    int quality);
 
   // PatchWriterInterface overrides.
   bool Init(size_t new_size) override;

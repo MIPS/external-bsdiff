@@ -9,11 +9,18 @@
 
 namespace bsdiff {
 
-// TODO(xunchang) choose the bsdiff format based on the input parameter.
 std::unique_ptr<PatchWriterInterface> CreateBsdiffPatchWriter(
     const std::string& patch_filename) {
   return std::unique_ptr<PatchWriterInterface>(
-      new BsdiffPatchWriter(patch_filename, BsdiffFormat::kLegacy));
+      new BsdiffPatchWriter(patch_filename));
+}
+
+std::unique_ptr<PatchWriterInterface> CreateBSDF2PatchWriter(
+    const std::string& patch_filename,
+    CompressorType type,
+    int quality) {
+  return std::unique_ptr<PatchWriterInterface>(
+      new BsdiffPatchWriter(patch_filename, type, quality));
 }
 
 std::unique_ptr<PatchWriterInterface> CreateEndsleyPatchWriter(

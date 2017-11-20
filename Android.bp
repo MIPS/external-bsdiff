@@ -60,7 +60,6 @@ cc_library_static {
         "bsdiff.cc",
         "bz2_compressor.cc",
         "compressor_buffer.cc",
-        "compressor_interface.cc",
         "diff_encoder.cc",
         "endsley_patch_writer.cc",
         "logging.cc",
@@ -94,7 +93,10 @@ cc_binary_host {
     name: "bsdiff",
     defaults: ["bsdiff_defaults"],
 
-    srcs: ["bsdiff_main.cc"],
+    srcs: [
+        "bsdiff_arguments.cc",
+        "bsdiff_main.cc",
+    ],
     static_libs: [
         "libbsdiff",
         "libdivsufsort64",
@@ -111,6 +113,8 @@ cc_test {
     test_suites: ["device-tests"],
     srcs: [
         "brotli_compressor_unittest.cc",
+        "bsdiff_arguments.cc",
+        "bsdiff_arguments_unittest.cc",
         "bsdiff_unittest.cc",
         "bspatch_unittest.cc",
         "diff_encoder_unittest.cc",

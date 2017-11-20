@@ -125,8 +125,8 @@ TEST_F(PatchReaderTest, PatchReaderLegacyFormatSmoke) {
 TEST_F(PatchReaderTest, PatchReaderNewFormatSmoke) {
   // Compress the data with one bz2 and two brotli compressors.
   ctrl_stream_.reset(new BZ2Compressor());
-  diff_stream_.reset(new BrotliCompressor());
-  extra_stream_.reset(new BrotliCompressor());
+  diff_stream_.reset(new BrotliCompressor(11));
+  extra_stream_.reset(new BrotliCompressor(11));
 
   CompressData();
 

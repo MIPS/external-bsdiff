@@ -35,8 +35,6 @@ class CompressorInterface {
   CompressorInterface() = default;
 };
 
-std::unique_ptr<CompressorInterface> CreateCompressor(CompressorType type);
-
 }  // namespace bsdiff
 
 #endif  // _BSDIFF_COMPRESSOR_INTERFACE_H_

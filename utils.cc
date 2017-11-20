@@ -1,9 +1,6 @@
-#include <stdint.h>
-
 #include "bsdiff/utils.h"
 
 namespace bsdiff {
-
 
 int64_t ParseInt64(const uint8_t* buf) {
   int64_t result = buf[7] & 0x7F;

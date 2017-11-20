@@ -7,25 +7,31 @@
 #include "bsdiff/logging.h"
 
 namespace {
-// TODO(xunchang) set brotli compression parameters based on input options.
+
 const size_t kBufferSize = 1024 * 1024;
-const uint32_t kBrotliQuality = 11;
-const uint32_t kBrotliLgwin = 20;
+const uint32_t kBrotliDefaultLgwin = 20;
 
 }  // namespace
 
 namespace bsdiff {
-
-BrotliCompressor::BrotliCompressor() : comp_buffer_(kBufferSize) {
+BrotliCompressor::BrotliCompressor(int quality) : comp_buffer_(kBufferSize) {
   brotli_encoder_state_ =
       BrotliEncoderCreateInstance(nullptr, nullptr, nullptr);
   if (!brotli_encoder_state_) {
     LOG(ERROR) << "Failed to initialize brotli decoder state";
   } else {
+    int compression_quality = quality;
+    if (compression_quality > BROTLI_MAX_QUALITY ||
+        compression_quality < BROTLI_MIN_QUALITY) {
+      LOG(ERROR) << "Invalid quality value: " << quality
+                 << ", using default quality instead.";
+      compression_quality = BROTLI_MAX_QUALITY;
+    }
+
     BrotliEncoderSetParameter(brotli_encoder_state_, BROTLI_PARAM_QUALITY,
-                              kBrotliQuality);
+                              compression_quality);
     BrotliEncoderSetParameter(brotli_encoder_state_, BROTLI_PARAM_LGWIN,
-                              kBrotliLgwin);
+                              kBrotliDefaultLgwin);
   }
 }
 
