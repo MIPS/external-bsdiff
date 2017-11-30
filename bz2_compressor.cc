@@ -8,8 +8,6 @@
 
 #include "bsdiff/logging.h"
 
-using std::endl;
-
 namespace {
 
 // The BZ2 compression level used. Smaller compression levels are nowadays
@@ -25,7 +23,7 @@ BZ2Compressor::BZ2Compressor() : comp_buffer_(1024 * 1024) {
   int bz_err = BZ2_bzCompressInit(&bz_strm_, kCompressionLevel,
                                   0 /* verbosity */, 0 /* workFactor */);
   if (bz_err != BZ_OK) {
-    LOG(ERROR) << "Initializing bz_strm, bz_error=" << bz_err << endl;
+    LOG(ERROR) << "Initializing bz_strm, bz_error=" << bz_err;
   } else {
     bz_strm_initialized_ = true;
   }
@@ -36,7 +34,7 @@ BZ2Compressor::~BZ2Compressor() {
     return;
   int bz_err = BZ2_bzCompressEnd(&bz_strm_);
   if (bz_err != BZ_OK) {
-    LOG(ERROR) << "Deleting the compressor stream, bz_error=" << bz_err << endl;
+    LOG(ERROR) << "Deleting the compressor stream, bz_error=" << bz_err;
   }
 }
 
@@ -54,7 +52,7 @@ bool BZ2Compressor::Write(const uint8_t* buf, size_t size) {
     bz_strm_.avail_out = comp_buffer_.buffer_size();
     int bz_err = BZ2_bzCompress(&bz_strm_, BZ_RUN);
     if (bz_err != BZ_RUN_OK) {
-      LOG(ERROR) << "Compressing data, bz_error=" << bz_err << endl;
+      LOG(ERROR) << "Compressing data, bz_error=" << bz_err;
       return false;
     }
 
@@ -84,13 +82,13 @@ bool BZ2Compressor::Finish() {
     }
   }
   if (bz_err != BZ_STREAM_END) {
-    LOG(ERROR) << "Finishing compressing data, bz_error=" << bz_err << endl;
+    LOG(ERROR) << "Finishing compressing data, bz_error=" << bz_err;
     return false;
   }
   bz_err = BZ2_bzCompressEnd(&bz_strm_);
   bz_strm_initialized_ = false;
   if (bz_err != BZ_OK) {
-    LOG(ERROR) << "Deleting the compressor stream, bz_error=" << bz_err << endl;
+    LOG(ERROR) << "Deleting the compressor stream, bz_error=" << bz_err;
     return false;
   }
   return true;

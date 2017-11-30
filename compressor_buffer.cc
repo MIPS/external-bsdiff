@@ -25,8 +25,7 @@ const std::vector<uint8_t>& CompressorBuffer::GetCompressedData() {
 void CompressorBuffer::AddDataToChunks(size_t data_size) {
   if (data_size > comp_buffer_.size()) {
     LOG(ERROR) << "data size: " << data_size
-               << " is larger than buffer size: " << comp_buffer_.size()
-               << std::endl;
+               << " is larger than buffer size: " << comp_buffer_.size();
     return;
   }
   comp_chunks_.emplace_back(comp_buffer_.data(),

@@ -6,15 +6,13 @@
 
 #include "bsdiff/logging.h"
 
-using std::endl;
-
 namespace bsdiff {
 
 bool BrotliDecompressor::SetInputData(const uint8_t* input_data, size_t size) {
   brotli_decoder_state_ =
       BrotliDecoderCreateInstance(nullptr, nullptr, nullptr);
   if (brotli_decoder_state_ == nullptr) {
-    LOG(ERROR) << "Failed to initialize brotli decoder." << endl;
+    LOG(ERROR) << "Failed to initialize brotli decoder.";
     return false;
   }
   next_in_ = input_data;
@@ -36,12 +34,10 @@ bool BrotliDecompressor::Read(uint8_t* output_data, size_t bytes_to_output) {
     if (result == BROTLI_DECODER_RESULT_ERROR) {
       LOG(ERROR) << "Decompression failed with "
                  << BrotliDecoderErrorString(
-                        BrotliDecoderGetErrorCode(brotli_decoder_state_))
-                 << endl;
+                        BrotliDecoderGetErrorCode(brotli_decoder_state_));
       return false;
     } else if (result == BROTLI_DECODER_RESULT_NEEDS_MORE_INPUT) {
-      LOG(ERROR) << "Decompressor reached EOF while reading from input stream."
-                 << endl;
+      LOG(ERROR) << "Decompressor reached EOF while reading from input stream.";
       return false;
     }
   }
@@ -55,7 +51,7 @@ bool BrotliDecompressor::Close() {
   // and return true.
   if (BrotliDecoderIsUsed(brotli_decoder_state_) &&
       !BrotliDecoderIsFinished(brotli_decoder_state_)) {
-    LOG(ERROR) << "Unfinished brotli decoder." << endl;
+    LOG(ERROR) << "Unfinished brotli decoder.";
     return false;
   }
 

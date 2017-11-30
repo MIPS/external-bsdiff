@@ -18,7 +18,7 @@ std::unique_ptr<DecompressorInterface> CreateDecompressor(CompressorType type) {
       return std::unique_ptr<DecompressorInterface>(new BrotliDecompressor());
     default:
       LOG(ERROR) << "unsupported compressor type: "
-                 << static_cast<uint8_t>(type) << std::endl;
+                 << static_cast<uint8_t>(type);
       return nullptr;
   }
 }

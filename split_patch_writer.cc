@@ -8,8 +8,6 @@
 
 #include "bsdiff/logging.h"
 
-using std::endl;
-
 namespace bsdiff {
 
 bool SplitPatchWriter::Init(size_t new_size) {
@@ -24,7 +22,7 @@ bool SplitPatchWriter::Init(size_t new_size) {
   if (expected_patches != patches_.size()) {
     LOG(ERROR) << "Expected " << expected_patches << " for a new file of size "
                << new_size_ << " split in chunks of " << new_chunk_size_
-               << " but got " << patches_.size() << " instead." << endl;
+               << " but got " << patches_.size() << " instead.";
     return false;
   }
 
@@ -70,12 +68,12 @@ bool SplitPatchWriter::AddControlEntry(const ControlEntry& entry) {
     if (remaining.diff_size + remaining.extra_size > 0) {
       current_patch_++;
       if (current_patch_ >= patches_.size()) {
-        LOG(ERROR) << "Writing past the last patch" << endl;
+        LOG(ERROR) << "Writing past the last patch";
         return false;
       }
       if (!patches_[current_patch_]->Init(std::min(
               new_size_ - current_patch_ * new_chunk_size_, new_chunk_size_))) {
-        LOG(ERROR) << "Failed to initialize patch " << current_patch_ << endl;
+        LOG(ERROR) << "Failed to initialize patch " << current_patch_;
         return false;
       }
       if (!remaining.diff_size) {
@@ -112,7 +110,7 @@ bool SplitPatchWriter::Close() {
     missing_bytes += size;
   if (missing_bytes > 0) {
     LOG(ERROR) << "Close() called but there are " << missing_bytes
-               << " bytes missing from Write*Stream() calls" << endl;
+               << " bytes missing from Write*Stream() calls";
     return false;
   }
 
@@ -120,9 +118,8 @@ bool SplitPatchWriter::Close() {
   // patches in the list those have not been initialized/closed, which is a
   // programming error.
   if (current_patch_ + 1 != patches_.size()) {
-    LOG(ERROR) << "Close() called but no bytes habe been written to the last "
-                  "patch"
-               << endl;
+    LOG(ERROR)
+        << "Close() called but no bytes habe been written to the last patch";
     return false;
   }
 
@@ -141,7 +138,7 @@ bool SplitPatchWriter::AddControlEntryToCurrentPatch(
     return true;
 
   if (current_patch_ >= patches_.size()) {
-    LOG(ERROR) << "Writing past the last patch" << endl;
+    LOG(ERROR) << "Writing past the last patch";
     return false;
   }
   old_pos_ += entry.diff_size + entry.offset_increment;
