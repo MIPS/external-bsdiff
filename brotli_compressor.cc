@@ -6,8 +6,6 @@
 
 #include "bsdiff/logging.h"
 
-using std::endl;
-
 namespace {
 // TODO(xunchang) set brotli compression parameters based on input options.
 const size_t kBufferSize = 1024 * 1024;
@@ -22,7 +20,7 @@ BrotliCompressor::BrotliCompressor() : comp_buffer_(kBufferSize) {
   brotli_encoder_state_ =
       BrotliEncoderCreateInstance(nullptr, nullptr, nullptr);
   if (!brotli_encoder_state_) {
-    LOG(ERROR) << "Failed to initialize brotli decoder state" << endl;
+    LOG(ERROR) << "Failed to initialize brotli decoder state";
   } else {
     BrotliEncoderSetParameter(brotli_encoder_state_, BROTLI_PARAM_QUALITY,
                               kBrotliQuality);
@@ -50,7 +48,7 @@ bool BrotliCompressor::Write(const uint8_t* buf, size_t size) {
             brotli_encoder_state_, BROTLI_OPERATION_PROCESS, &avail_in,
             &next_in, &avail_out, &next_out, nullptr)) {
       LOG(ERROR) << "BrotliCompressor failed to compress " << avail_in
-                 << " bytes of data." << endl;
+                 << " bytes of data.";
       return false;
     }
 
@@ -74,7 +72,7 @@ bool BrotliCompressor::Finish() {
     if (!BrotliEncoderCompressStream(
             brotli_encoder_state_, BROTLI_OPERATION_FINISH, &avail_in, &next_in,
             &avail_out, &next_out, nullptr)) {
-      LOG(ERROR) << "BrotliCompressor failed to finish compression" << endl;
+      LOG(ERROR) << "BrotliCompressor failed to finish compression";
       return false;
     }
 

@@ -12,8 +12,6 @@
 #include "bsdiff/control_entry.h"
 #include "bsdiff/logging.h"
 
-using std::endl;
-
 namespace {
 
 void EncodeInt64(int64_t x, uint8_t* buf) {
@@ -46,13 +44,13 @@ BsdiffPatchWriter::BsdiffPatchWriter(const std::string& patch_filename,
 
 bool BsdiffPatchWriter::Init(size_t /* new_size */) {
   if (!(ctrl_stream_ && diff_stream_ && extra_stream_)) {
-    LOG(ERROR) << "uninitialized compressor stream" << endl;
+    LOG(ERROR) << "uninitialized compressor stream";
     return false;
   }
 
   fp_ = fopen(patch_filename_.c_str(), "w");
   if (!fp_) {
-    LOG(ERROR) << "Opening " << patch_filename_ << endl;
+    LOG(ERROR) << "Opening " << patch_filename_;
     return false;
   }
   return true;
@@ -80,13 +78,13 @@ bool BsdiffPatchWriter::AddControlEntry(const ControlEntry& entry) {
 
 bool BsdiffPatchWriter::Close() {
   if (!fp_) {
-    LOG(ERROR) << "File not open." << endl;
+    LOG(ERROR) << "File not open.";
     return false;
   }
 
   if (!ctrl_stream_->Finish() || !diff_stream_->Finish() ||
       !extra_stream_->Finish()) {
-    LOG(ERROR) << "Finalizing compressed streams." << endl;
+    LOG(ERROR) << "Finalizing compressed streams.";
     return false;
   }
 
@@ -98,20 +96,20 @@ bool BsdiffPatchWriter::Close() {
     return false;
 
   if (fwrite(ctrl_data.data(), 1, ctrl_data.size(), fp_) != ctrl_data.size()) {
-    LOG(ERROR) << "Writing ctrl_data." << endl;
+    LOG(ERROR) << "Writing ctrl_data.";
     return false;
   }
   if (fwrite(diff_data.data(), 1, diff_data.size(), fp_) != diff_data.size()) {
-    LOG(ERROR) << "Writing diff_data." << endl;
+    LOG(ERROR) << "Writing diff_data.";
     return false;
   }
   if (fwrite(extra_data.data(), 1, extra_data.size(), fp_) !=
       extra_data.size()) {
-    LOG(ERROR) << "Writing extra_data." << endl;
+    LOG(ERROR) << "Writing extra_data.";
     return false;
   }
   if (fclose(fp_) != 0) {
-    LOG(ERROR) << "Closing the patch file." << endl;
+    LOG(ERROR) << "Closing the patch file.";
     return false;
   }
   fp_ = nullptr;
@@ -146,7 +144,7 @@ bool BsdiffPatchWriter::WriteHeader(uint64_t ctrl_size, uint64_t diff_size) {
     header[6] = static_cast<uint8_t>(diff_stream_->Type());
     header[7] = static_cast<uint8_t>(extra_stream_->Type());
   } else {
-    LOG(ERROR) << "Unsupported bsdiff format." << endl;
+    LOG(ERROR) << "Unsupported bsdiff format.";
     return false;
   }
 
@@ -154,7 +152,7 @@ bool BsdiffPatchWriter::WriteHeader(uint64_t ctrl_size, uint64_t diff_size) {
   EncodeInt64(diff_size, header + 16);
   EncodeInt64(written_output_, header + 24);
   if (fwrite(header, sizeof(header), 1, fp_) != 1) {
-    LOG(ERROR) << "writing to the patch file" << endl;
+    LOG(ERROR) << "writing to the patch file";
     return false;
   }
   return true;

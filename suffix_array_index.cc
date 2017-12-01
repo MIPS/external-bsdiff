@@ -12,8 +12,6 @@
 
 #include "bsdiff/logging.h"
 
-using std::endl;
-
 namespace {
 
 // libdivsufsort C++ overloaded functions used to allow calling the right
@@ -77,12 +75,12 @@ template <typename SAIDX>
 bool SuffixArrayIndex<SAIDX>::Init(const uint8_t* text, size_t n) {
   if (!sa_.empty()) {
     // Already initialized.
-    LOG(ERROR) << "SuffixArray already initialized" << endl;
+    LOG(ERROR) << "SuffixArray already initialized";
     return false;
   }
   if (static_cast<uint64_t>(n) >
       static_cast<uint64_t>(std::numeric_limits<SAIDX>::max())) {
-    LOG(ERROR) << "Input too big (" << n << ") for this implementation" << endl;
+    LOG(ERROR) << "Input too big (" << n << ") for this implementation";
     return false;
   }
   text_ = text;
@@ -90,7 +88,7 @@ bool SuffixArrayIndex<SAIDX>::Init(const uint8_t* text, size_t n) {
   sa_.resize(n + 1);
 
   if (n > 0 && CallDivSufSort(text_, sa_.data(), n) != 0) {
-    LOG(ERROR) << "divsufsrot() failed" << endl;
+    LOG(ERROR) << "divsufsrot() failed";
     return false;
   }
 

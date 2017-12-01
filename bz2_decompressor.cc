@@ -11,14 +11,12 @@
 
 #include "bsdiff/logging.h"
 
-using std::endl;
-
 namespace bsdiff {
 
 bool BZ2Decompressor::SetInputData(const uint8_t* input_data, size_t size) {
   // TODO(xunchang) update the avail_in for size > 2GB.
   if (size > std::numeric_limits<unsigned int>::max()) {
-    LOG(ERROR) << "Oversized input data" << size << endl;
+    LOG(ERROR) << "Oversized input data" << size;
     return false;
   }
 
@@ -29,7 +27,7 @@ bool BZ2Decompressor::SetInputData(const uint8_t* input_data, size_t size) {
   stream_.opaque = nullptr;
   int bz2err = BZ2_bzDecompressInit(&stream_, 0, 0);
   if (bz2err != BZ_OK) {
-    LOG(ERROR) << "Failed to bzinit control stream: " << bz2err << endl;
+    LOG(ERROR) << "Failed to bzinit control stream: " << bz2err;
     return false;
   }
   return true;
@@ -45,7 +43,7 @@ bool BZ2Decompressor::Read(uint8_t* output_data, size_t bytes_to_output) {
     int bz2err = BZ2_bzDecompress(&stream_);
     if (bz2err != BZ_OK && bz2err != BZ_STREAM_END) {
       LOG(ERROR) << "Failed to decompress " << output_size
-                 << " bytes of data, error: " << bz2err << endl;
+                 << " bytes of data, error: " << bz2err;
       return false;
     }
     bytes_to_output -= (output_size - stream_.avail_out);
@@ -56,7 +54,7 @@ bool BZ2Decompressor::Read(uint8_t* output_data, size_t bytes_to_output) {
 bool BZ2Decompressor::Close() {
   int bz2err = BZ2_bzDecompressEnd(&stream_);
   if (bz2err != BZ_OK) {
-    LOG(ERROR) << "BZ2_bzDecompressEnd returns with " << bz2err << endl;
+    LOG(ERROR) << "BZ2_bzDecompressEnd returns with " << bz2err;
     return false;
   }
   return true;

@@ -10,8 +10,6 @@
 
 #include "bsdiff/logging.h"
 
-using std::endl;
-
 namespace {
 
 constexpr uint8_t kEndsleyMagicHeader[] = "ENDSLEY/BSDIFF43";
@@ -110,13 +108,12 @@ bool EndsleyPatchWriter::Close() {
   Flush();
 
   if (pending_diff_ || pending_extra_ || !control_.empty()) {
-    LOG(ERROR) << "Insufficient data sent to diff/extra streams" << endl;
+    LOG(ERROR) << "Insufficient data sent to diff/extra streams";
     return false;
   }
 
   if (!diff_data_.empty() || !extra_data_.empty()) {
-    LOG(ERROR) << "Pending data to diff/extra not flushed out on Close()"
-               << endl;
+    LOG(ERROR) << "Pending data to diff/extra not flushed out on Close()";
     return false;
   }
   return true;
