@@ -15,8 +15,6 @@
 #include "bsdiff/logging.h"
 #include "bsdiff/utils.h"
 
-using std::endl;
-
 namespace bsdiff {
 
 bool BsdiffPatchReader::Init(const uint8_t* patch_data, size_t patch_size) {
@@ -33,7 +31,7 @@ bool BsdiffPatchReader::Init(const uint8_t* patch_data, size_t patch_size) {
   // extra block; seek forwards in oldfile by z bytes".
 
   if (patch_size < 32) {
-    LOG(ERROR) << "Too small to be a bspatch." << endl;
+    LOG(ERROR) << "Too small to be a bspatch.";
     return false;
   }
   // Check for appropriate magic.
@@ -59,12 +57,12 @@ bool BsdiffPatchReader::Init(const uint8_t* patch_data, size_t patch_size) {
           break;
         default:
           LOG(ERROR) << "Unsupported compression type: "
-                     << static_cast<int>(type) << endl;
+                     << static_cast<int>(type);
           return false;
       }
     }
   } else {
-    LOG(ERROR) << "Not a bsdiff patch." << endl;
+    LOG(ERROR) << "Not a bsdiff patch.";
     return false;
   }
 
@@ -77,7 +75,7 @@ bool BsdiffPatchReader::Init(const uint8_t* patch_data, size_t patch_size) {
     LOG(ERROR) << "Corrupt patch.  ctrl_len: " << ctrl_len
                << ", data_len: " << diff_len
                << ", new_file_size: " << signed_newsize
-               << ", patch_size: " << patch_size << endl;
+               << ", patch_size: " << patch_size;
     return false;
   }
   new_file_size_ = signed_newsize;
@@ -86,21 +84,21 @@ bool BsdiffPatchReader::Init(const uint8_t* patch_data, size_t patch_size) {
   diff_stream_ = CreateDecompressor(compression_type[1]);
   extra_stream_ = CreateDecompressor(compression_type[2]);
   if (!(ctrl_stream_ && diff_stream_ && extra_stream_)) {
-    LOG(ERROR) << "uninitialized decompressor stream" << endl;
+    LOG(ERROR) << "uninitialized decompressor stream";
     return false;
   }
 
   size_t offset = 32;
   if (!ctrl_stream_->SetInputData(const_cast<uint8_t*>(patch_data) + offset,
                                   ctrl_len)) {
-    LOG(ERROR) << "Failed to init ctrl stream, ctrl_len: " << ctrl_len << endl;
+    LOG(ERROR) << "Failed to init ctrl stream, ctrl_len: " << ctrl_len;
     return false;
   }
 
   offset += ctrl_len;
   if (!diff_stream_->SetInputData(const_cast<uint8_t*>(patch_data) + offset,
                                   diff_len)) {
-    LOG(ERROR) << "Failed to init ctrl stream, diff_len: " << diff_len << endl;
+    LOG(ERROR) << "Failed to init ctrl stream, diff_len: " << diff_len;
     return false;
   }
 
@@ -108,7 +106,7 @@ bool BsdiffPatchReader::Init(const uint8_t* patch_data, size_t patch_size) {
   if (!extra_stream_->SetInputData(const_cast<uint8_t*>(patch_data) + offset,
                                    patch_size - offset)) {
     LOG(ERROR) << "Failed to init extra stream, extra_offset: " << offset
-               << ", patch_size: " << patch_size << endl;
+               << ", patch_size: " << patch_size;
     return false;
   }
   return true;
@@ -130,7 +128,7 @@ bool BsdiffPatchReader::ParseControlEntry(ControlEntry* control_entry) {
   // Sanity check.
   if (diff_size < 0 || extra_size < 0) {
     LOG(ERROR) << "Corrupt patch; diff_size: " << diff_size
-               << ", extra_size: " << extra_size << endl;
+               << ", extra_size: " << extra_size;
     return false;
   }
 
@@ -154,17 +152,17 @@ bool BsdiffPatchReader::ReadExtraStream(uint8_t* buf, size_t size) {
 
 bool BsdiffPatchReader::Finish() {
   if (!ctrl_stream_->Close()) {
-    LOG(ERROR) << "Failed to close the control stream" << endl;
+    LOG(ERROR) << "Failed to close the control stream";
     return false;
   }
 
   if (!diff_stream_->Close()) {
-    LOG(ERROR) << "Failed to close the diff stream" << endl;
+    LOG(ERROR) << "Failed to close the diff stream";
     return false;
   }
 
   if (!extra_stream_->Close()) {
-    LOG(ERROR) << "Failed to close the extra stream" << endl;
+    LOG(ERROR) << "Failed to close the extra stream";
     return false;
   }
   return true;

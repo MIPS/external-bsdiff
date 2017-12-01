@@ -8,8 +8,6 @@
 
 #include "bsdiff/logging.h"
 
-using std::endl;
-
 namespace {
 
 // The maximum positive number that we should encode. A number larger than this
@@ -27,19 +25,19 @@ bool DiffEncoder::Init() {
 
 bool DiffEncoder::AddControlEntry(const ControlEntry& entry) {
   if (entry.diff_size > kMaxEncodedUint64Value) {
-    LOG(ERROR) << "Encoding value out of range " << entry.diff_size << endl;
+    LOG(ERROR) << "Encoding value out of range " << entry.diff_size;
     return false;
   }
 
   if (entry.extra_size > kMaxEncodedUint64Value) {
-    LOG(ERROR) << "Encoding value out of range " << entry.extra_size << endl;
+    LOG(ERROR) << "Encoding value out of range " << entry.extra_size;
     return false;
   }
 
   // entry.diff_size + entry.extra_size don't overflow in uint64_t since we
   // checked the kMaxEncodedUint64Value limit before.
   if (entry.diff_size + entry.extra_size > new_size_ - written_output_) {
-    LOG(ERROR) << "Wrote more output than the declared new_size" << endl;
+    LOG(ERROR) << "Wrote more output than the declared new_size";
     return false;
   }
 
@@ -48,7 +46,7 @@ bool DiffEncoder::AddControlEntry(const ControlEntry& entry) {
        static_cast<uint64_t>(old_pos_) + entry.diff_size > old_size_)) {
     LOG(ERROR) << "The pointer in the old stream [" << old_pos_ << ", "
                << (static_cast<uint64_t>(old_pos_) + entry.diff_size)
-               << ") is out of bounds [0, " << old_size_ << ")" << endl;
+               << ") is out of bounds [0, " << old_size_ << ")";
     return false;
   }
 
@@ -62,15 +60,14 @@ bool DiffEncoder::AddControlEntry(const ControlEntry& entry) {
     diff[i] = new_buf_[written_output_ + i] - old_buf_[old_pos_ + i];
   }
   if (!patch_->WriteDiffStream(diff.data(), diff.size())) {
-    LOG(ERROR) << "Writing " << diff.size() << " bytes to the diff stream"
-               << endl;
+    LOG(ERROR) << "Writing " << diff.size() << " bytes to the diff stream";
     return false;
   }
 
   if (!patch_->WriteExtraStream(new_buf_ + written_output_ + entry.diff_size,
                                 entry.extra_size)) {
-    LOG(ERROR) << "Writing " << entry.extra_size << " bytes to the extra stream"
-               << endl;
+    LOG(ERROR) << "Writing " << entry.extra_size
+               << " bytes to the extra stream";
     return false;
   }
 
@@ -82,7 +79,7 @@ bool DiffEncoder::AddControlEntry(const ControlEntry& entry) {
 
 bool DiffEncoder::Close() {
   if (written_output_ != new_size_) {
-    LOG(ERROR) << "Close() called but not all the output was written" << endl;
+    LOG(ERROR) << "Close() called but not all the output was written";
     return false;
   }
   return patch_->Close();

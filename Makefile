@@ -40,6 +40,7 @@ bsdiff_src_files := \
     compressor_interface.cc \
     diff_encoder.cc \
     endsley_patch_writer.cc \
+    logging.cc \
     patch_writer.cc \
     patch_writer_factory.cc \
     split_patch_writer.cc \
@@ -55,6 +56,7 @@ bspatch_src_files := \
     extents.cc \
     extents_file.cc \
     file.cc \
+    logging.cc \
     memory_file.cc \
     patch_reader.cc \
     sink_file.cc \
