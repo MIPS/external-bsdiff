@@ -27,6 +27,9 @@
       # "bsdiff/...".
       '<(platform2_root)/../aosp/external',
     ],
+    'defines': [
+      '_FILE_OFFSET_BITS=64',
+    ],
   },
   'targets': [
     # bsdiff static library
