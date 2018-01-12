@@ -13,3 +13,6 @@
 /bsdiff
 /bspatch
 /bsdiff_unittest
+
+# Generated dependencies
+/.deps

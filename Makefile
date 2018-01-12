@@ -28,7 +28,7 @@ INSTALL_MAN ?= $(INSTALL) -c -m 444
 all: $(BINARIES)
 test: bsdiff_unittest
 clean:
-	rm -f *.o $(BINARIES) bsdiff_unittest
+	rm -f *.o $(BINARIES) bsdiff_unittest .deps
 
 ### List of source files for each project. Keep in sync with the Android.mk.
 # "bsdiff" program.
@@ -108,31 +108,10 @@ libbsdiff.so libbspatch.so:
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -Wl,-soname,$@ -shared -o $@ $^ $(LDLIBS)
 
 # Source file dependencies.
-bspatch.o: bspatch.cc include/bsdiff/bspatch.h \
- include/bsdiff/extents_file.h include/bsdiff/file_interface.h \
- buffer_file.h extents.h file.h memory_file.h sink_file.h
-bspatch_main.o: bspatch_main.cc include/bsdiff/bspatch.h \
- include/bsdiff/extents_file.h include/bsdiff/file_interface.h
-bspatch_unittest.o: bspatch_unittest.cc include/bsdiff/bspatch.h \
- include/bsdiff/extents_file.h include/bsdiff/file_interface.h \
- test_utils.h
-buffer_file.o: buffer_file.cc buffer_file.h \
- include/bsdiff/file_interface.h include/bsdiff/bspatch.h \
- include/bsdiff/extents_file.h
-extents.o: extents.cc extents.h include/bsdiff/extents_file.h \
- include/bsdiff/file_interface.h
-extents_file.o: extents_file.cc include/bsdiff/extents_file.h \
- include/bsdiff/file_interface.h
-extents_file_unittest.o: extents_file_unittest.cc \
- include/bsdiff/extents_file.h include/bsdiff/file_interface.h
-extents_unittest.o: extents_unittest.cc extents.h \
- include/bsdiff/extents_file.h include/bsdiff/file_interface.h
-file.o: file.cc file.h include/bsdiff/file_interface.h
-memory_file.o: memory_file.cc memory_file.h \
- include/bsdiff/file_interface.h
-sink_file.o: sink_file.cc sink_file.h include/bsdiff/file_interface.h
-testrunner.o: testrunner.cc test_utils.h
-test_utils.o: test_utils.cc test_utils.h
+.deps: $(bsdiff_src_files) $(bspatch_src_files) $(bsdiff_common_unittests) \
+       bsdiff_main.cc bspatch_main.cc
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -MM $^ >$@ || (rm -f $@; false)
+-include .deps
 
 install:
 	mkdir -p $(DESTDIR)$(BINDIR) $(DESTDIR)$(LIBDIR) $(DESTDIR)$(MAN1DIR) \
