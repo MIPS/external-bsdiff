@@ -12,6 +12,9 @@
 
 #include "bsdiff/common.h"
 
+static_assert(sizeof(off_t) == sizeof(int64_t),
+              "off_t must be a 64-bit number, use -D_FILE_OFFSET_BITS=64");
+
 namespace bsdiff {
 
 class BSDIFF_EXPORT FileInterface {
