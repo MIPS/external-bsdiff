@@ -53,8 +53,7 @@ class BsdiffPatchWriterTest : public testing::Test {
   }
 
   test_utils::ScopedTempFile patch_file_{"bsdiff_newfile.XXXXXX"};
-  BsdiffPatchWriter patch_writer_{patch_file_.filename(),
-                                  BsdiffFormat::kLegacy};
+  BsdiffPatchWriter patch_writer_{patch_file_.filename()};
 };
 
 TEST_F(BsdiffPatchWriterTest, CreateEmptyPatchTest) {

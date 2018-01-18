@@ -18,7 +18,7 @@ constexpr uint8_t kHelloWorld[] = {
 namespace bsdiff {
 
 TEST(BrotliCompressorTest, BrotliCompressorSmoke) {
-  BrotliCompressor brotli_compressor;
+  BrotliCompressor brotli_compressor(11);
   EXPECT_TRUE(brotli_compressor.Write(kHelloWorld, sizeof(kHelloWorld)));
   EXPECT_TRUE(brotli_compressor.Finish());
   std::vector<uint8_t> compressed_data = brotli_compressor.GetCompressedData();
@@ -39,7 +39,7 @@ TEST(BrotliCompressorTest, BrotliCompressorSmoke) {
 
 TEST(BrotliCompressorTest, BrotliCompressorEmptyStream) {
   uint8_t empty_buffer[] = {};
-  BrotliCompressor brotli_compressor;
+  BrotliCompressor brotli_compressor(11);
   EXPECT_TRUE(brotli_compressor.Write(empty_buffer, sizeof(empty_buffer)));
   EXPECT_TRUE(brotli_compressor.Finish());
 

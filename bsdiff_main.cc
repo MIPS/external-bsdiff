@@ -4,6 +4,7 @@
 
 #include <err.h>
 #include <fcntl.h>
+#include <getopt.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -13,9 +14,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <iostream>
 #include <limits>
 
 #include "bsdiff/bsdiff.h"
+#include "bsdiff/bsdiff_arguments.h"
+#include "bsdiff/constants.h"
 #include "bsdiff/patch_writer_factory.h"
 
 namespace {
@@ -50,38 +54,69 @@ void* MapFile(const char* filename, size_t* filesize) {
 }
 
 // Generate bsdiff patch from the |old_filename| file to the |new_filename|
-// file storing the resulting patch in a new |patch_filename| file.
+// file with options in |arguments|. Store the resulting patch in a new
+// |patch_filename| file. Returns 0 on success.
 int GenerateBsdiffFromFiles(const char* old_filename,
                             const char* new_filename,
-                            const char* patch_filename) {
-  size_t oldsize, newsize;
-  int ret = 0;
-
+                            const char* patch_filename,
+                            const bsdiff::BsdiffArguments& arguments) {
+  size_t oldsize;
   uint8_t* old_buf = static_cast<uint8_t*>(MapFile(old_filename, &oldsize));
-  uint8_t* new_buf = static_cast<uint8_t*>(MapFile(new_filename, &newsize));
-
-  if (old_buf && new_buf) {
-    auto patch_writer = bsdiff::CreateBsdiffPatchWriter(patch_filename);
-
-    ret = bsdiff::bsdiff(old_buf, oldsize, new_buf, newsize, patch_writer.get(),
-                         nullptr);
-  } else {
-    ret = 1;
+  if (!old_buf) {
+    return 1;
   }
 
-  if (old_buf)
+  size_t newsize;
+  uint8_t* new_buf = static_cast<uint8_t*>(MapFile(new_filename, &newsize));
+  if (!new_buf) {
     munmap(old_buf, oldsize);
-  if (new_buf)
-    munmap(new_buf, newsize);
+    return 1;
+  }
 
-  return ret;
+  std::unique_ptr<bsdiff::PatchWriterInterface> patch_writer;
+  if (arguments.format() == bsdiff::BsdiffFormat::kLegacy) {
+    patch_writer = bsdiff::CreateBsdiffPatchWriter(patch_filename);
+  } else if (arguments.format() == bsdiff::BsdiffFormat::kBsdf2) {
+    patch_writer = bsdiff::CreateBSDF2PatchWriter(
+        patch_filename, arguments.compressor_type(),
+        arguments.compression_quality());
+  } else {
+    std::cerr << "unexpected bsdiff format." << std::endl;
+    return 1;
+  }
+
+  return bsdiff::bsdiff(old_buf, oldsize, new_buf, newsize, patch_writer.get(),
+                        nullptr);
+}
+
+void PrintUsage(const std::string& proc_name) {
+  std::cerr << "usage: " << proc_name
+            << " [options] oldfile newfile patchfile\n";
+  std::cerr << "  --format <legacy|bsdiff40|bsdf2>  The format of the bsdiff"
+               " patch.\n"
+            << "  --type <bz2|brotli>      The algorithm to compress the "
+               "patch, bsdf2 format only.\n"
+            << "  --quality                Quality of the patch compression,"
+               " brotli only.\n";
 }
 
 }  // namespace
 
 int main(int argc, char* argv[]) {
-  if (argc != 4)
-    errx(1, "usage: %s oldfile newfile patchfile\n", argv[0]);
+  bsdiff::BsdiffArguments arguments;
 
-  return GenerateBsdiffFromFiles(argv[1], argv[2], argv[3]);
+  if (!arguments.ParseCommandLine(argc, argv)) {
+    PrintUsage(argv[0]);
+    return 1;
+  }
+
+  // The optind will be updated in ParseCommandLine to parse the options; and
+  // we expect the rest of the arguments to be oldfile, newfile, patchfile.
+  if (!arguments.IsValid() || argc - optind != 3) {
+    PrintUsage(argv[0]);
+    return 1;
+  }
+
+  return GenerateBsdiffFromFiles(argv[optind], argv[optind + 1],
+                                 argv[optind + 2], arguments);
 }

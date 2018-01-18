@@ -26,19 +26,25 @@ void EncodeInt64(int64_t x, uint8_t* buf) {
 
 namespace bsdiff {
 
+BsdiffPatchWriter::BsdiffPatchWriter(const std::string& patch_filename)
+    : patch_filename_(patch_filename), format_(BsdiffFormat::kLegacy) {
+  ctrl_stream_.reset(new BZ2Compressor());
+  diff_stream_.reset(new BZ2Compressor());
+  extra_stream_.reset(new BZ2Compressor());
+}
+
 BsdiffPatchWriter::BsdiffPatchWriter(const std::string& patch_filename,
-                                     BsdiffFormat format)
-    : patch_filename_(patch_filename), format_(format) {
-  if (format_ == BsdiffFormat::kLegacy) {
-    ctrl_stream_ = CreateCompressor(CompressorType::kBZ2);
-    diff_stream_ = CreateCompressor(CompressorType::kBZ2);
-    extra_stream_ = CreateCompressor(CompressorType::kBZ2);
-  } else {
-    // TODO(xunchang) set different compression method according to the
-    // compressed size for these streams.
-    ctrl_stream_ = CreateCompressor(CompressorType::kBrotli);
-    diff_stream_ = CreateCompressor(CompressorType::kBrotli);
-    extra_stream_ = CreateCompressor(CompressorType::kBrotli);
+                                     CompressorType type,
+                                     int quality)
+    : patch_filename_(patch_filename), format_(BsdiffFormat::kBsdf2) {
+  if (type == CompressorType::kBZ2) {
+    ctrl_stream_.reset(new BZ2Compressor());
+    diff_stream_.reset(new BZ2Compressor());
+    extra_stream_.reset(new BZ2Compressor());
+  } else if (type == CompressorType::kBrotli) {
+    ctrl_stream_.reset(new BrotliCompressor(quality));
+    diff_stream_.reset(new BrotliCompressor(quality));
+    extra_stream_.reset(new BrotliCompressor(quality));
   }
 }
 

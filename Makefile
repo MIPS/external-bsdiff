@@ -37,7 +37,6 @@ bsdiff_src_files := \
     bsdiff.cc \
     bz2_compressor.cc \
     compressor_buffer.cc \
-    compressor_interface.cc \
     diff_encoder.cc \
     endsley_patch_writer.cc \
     logging.cc \
@@ -65,6 +64,8 @@ bspatch_src_files := \
 # Unit test files.
 bsdiff_common_unittests := \
     brotli_compressor_unittest.cc \
+    bsdiff_arguments.cc \
+    bsdiff_arguments_unittest.cc \
     bsdiff_unittest.cc \
     bspatch_unittest.cc \
     diff_encoder_unittest.cc \
@@ -81,14 +82,13 @@ bsdiff_common_unittests := \
 
 BSDIFF_LIBS := -lbz2 -lbrotlienc -ldivsufsort -ldivsufsort64
 BSDIFF_OBJS := $(bsdiff_src_files:.cc=.o)
-
 BSPATCH_LIBS := -lbz2 -lbrotlidec
 BSPATCH_OBJS := $(bspatch_src_files:.cc=.o)
 
 UNITTEST_LIBS = -lgmock -lgtest -lpthread
 UNITTEST_OBJS := $(bsdiff_common_unittests:.cc=.o)
 
-bsdiff: $(BSDIFF_OBJS) bsdiff_main.o
+bsdiff: $(BSDIFF_OBJS) bsdiff_arguments.o bsdiff_main.o
 bsdiff: LDLIBS += $(BSDIFF_LIBS)
 libbsdiff.so: $(BSDIFF_OBJS)
 libbsdiff.so: LDLIBS += $(BSDIFF_LIBS)
