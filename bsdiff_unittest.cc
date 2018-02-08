@@ -33,11 +33,12 @@ class BsdiffTest : public testing::Test {
 
   void RunBsdiff() {
     EXPECT_EQ(0, bsdiff(old_file_.data(), old_file_.size(), new_file_.data(),
-                        new_file_.size(), &patch_writer_, nullptr));
+                        new_file_.size(), min_len_, &patch_writer_, nullptr));
   }
 
   std::vector<uint8_t> old_file_;
   std::vector<uint8_t> new_file_;
+  size_t min_len_ = 0;  // 0 means the default.
   FakePatchWriter patch_writer_;
 };
 
@@ -75,6 +76,27 @@ TEST_F(BsdiffTest, FileWithSmallErrorsTest) {
 
   // We expect that the result has only one entry with all in the diff stream
   // since the two files are very similar.
+  EXPECT_EQ(1U, patch_writer_.entries().size());
+  ControlEntry entry = patch_writer_.entries()[0];
+  EXPECT_EQ(100U, entry.diff_size);
+  EXPECT_EQ(0U, entry.extra_size);
+}
+
+TEST_F(BsdiffTest, MinLengthConsideredTest) {
+  old_file_.resize(100);
+  GenerateRandomBuffer(&old_file_);
+  new_file_ = old_file_;
+  // Copy the first 10 bytes to the middle.
+  for (size_t i = 0; i < 10; i++) {
+    new_file_[50 + i] = old_file_[i];
+  }
+
+  min_len_ = 12;
+  RunBsdiff();
+
+  // We expect that the 10 bytes in the middle that match the beginning are
+  // ignored and just emitted as diff data because the min_len is bigger than
+  // 10.
   EXPECT_EQ(1U, patch_writer_.entries().size());
   ControlEntry entry = patch_writer_.entries()[0];
   EXPECT_EQ(100U, entry.diff_size);
