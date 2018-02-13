@@ -85,8 +85,8 @@ int GenerateBsdiffFromFiles(const char* old_filename,
     return 1;
   }
 
-  return bsdiff::bsdiff(old_buf, oldsize, new_buf, newsize, patch_writer.get(),
-                        nullptr);
+  return bsdiff::bsdiff(old_buf, oldsize, new_buf, newsize,
+                        arguments.min_length(), patch_writer.get(), nullptr);
 }
 
 void PrintUsage(const std::string& proc_name) {
@@ -94,6 +94,8 @@ void PrintUsage(const std::string& proc_name) {
             << " [options] oldfile newfile patchfile\n";
   std::cerr << "  --format <legacy|bsdiff40|bsdf2>  The format of the bsdiff"
                " patch.\n"
+            << "  --minlen LEN             The minimum match length required "
+               "to consider a match in the algorithm.\n"
             << "  --type <bz2|brotli>      The algorithm to compress the "
                "patch, bsdf2 format only.\n"
             << "  --quality                Quality of the patch compression,"

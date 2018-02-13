@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "bsdiff_arguments.h"
+#include "bsdiff/bsdiff_arguments.h"
 
 #include <vector>
 
@@ -46,6 +46,16 @@ TEST(BsdiffArgumentsTest, ParseQualityTest) {
   EXPECT_FALSE(BsdiffArguments::ParseQuality("aabb", &quality));
 }
 
+TEST(BsdiffArgumentsTest, ParseMinLengthTest) {
+  size_t len;
+  EXPECT_TRUE(BsdiffArguments::ParseMinLength("11", &len));
+  EXPECT_EQ(11U, len);
+
+  // Check the out of range quality values.
+  EXPECT_FALSE(BsdiffArguments::ParseMinLength("-1", &len));
+  EXPECT_FALSE(BsdiffArguments::ParseMinLength("aabb", &len));
+}
+
 TEST(BsdiffArgumentsTest, ArgumentsValidTest) {
   // Default arguments using BsdiffFormat::kLegacy and CompressorType::kBZ2
   // should be valid.
@@ -67,14 +77,16 @@ TEST(BsdiffArgumentsTest, ArgumentsValidTest) {
 
 TEST(BsdiffArgumentsTest, ParseArgumentsSmokeTest) {
   std::vector<const char*> args = {"bsdiff", "--format=bsdf2", "--type=brotli",
-                                   "--quality=9"};
+                                   "--quality=9", "--minlen=12"};
 
   BsdiffArguments arguments;
-  EXPECT_TRUE(arguments.ParseCommandLine(4, const_cast<char**>(args.data())));
+  EXPECT_TRUE(
+      arguments.ParseCommandLine(args.size(), const_cast<char**>(args.data())));
 
   EXPECT_EQ(BsdiffFormat::kBsdf2, arguments.format());
   EXPECT_EQ(CompressorType::kBrotli, arguments.compressor_type());
   EXPECT_EQ(9, arguments.compression_quality());
+  EXPECT_EQ(12, arguments.min_length());
 }
 
 }  // namespace bsdiff

@@ -35,6 +35,8 @@ class BsdiffArguments {
   // Getter functions.
   BsdiffFormat format() const { return format_; }
 
+  int min_length() const { return min_length_; }
+
   CompressorType compressor_type() const { return compressor_type_; }
 
   int compression_quality() const { return compression_quality_; }
@@ -45,6 +47,9 @@ class BsdiffArguments {
 
   // Parse the compression type from string.
   static bool ParseCompressorType(const string& str, CompressorType* type);
+
+  // Parse the minimum length parameter from string.
+  static bool ParseMinLength(const string& str, size_t* len);
 
   // Parse the bsdiff format from string.
   static bool ParseBsdiffFormat(const string& str, BsdiffFormat* format);
@@ -62,8 +67,10 @@ class BsdiffArguments {
   // The quality of compression, only valid when using brotli as the
   // compression algorithm.
   int compression_quality_;
+
+  size_t min_length_{0};
 };
 
 }  // namespace bsdiff
 
-#endif  //_BSDIFF_BSDIFF_ARGUMENTS_H_
+#endif  // _BSDIFF_BSDIFF_ARGUMENTS_H_

@@ -50,11 +50,19 @@ int bsdiff(const uint8_t* old_buf, size_t oldsize, const uint8_t* new_buf,
            size_t newsize, const char* patch_filename,
            SuffixArrayIndexInterface** sai_cache) {
 	BsdiffPatchWriter patch(patch_filename);
-	return bsdiff(old_buf, oldsize, new_buf, newsize, &patch, sai_cache);
+	return bsdiff(old_buf, oldsize, new_buf, newsize, 0, &patch,
+	              sai_cache);
 }
 
 int bsdiff(const uint8_t* old_buf, size_t oldsize, const uint8_t* new_buf,
            size_t newsize, PatchWriterInterface* patch,
+           SuffixArrayIndexInterface** sai_cache) {
+	return bsdiff(old_buf, oldsize, new_buf, newsize, 0, patch,
+	              sai_cache);
+}
+
+int bsdiff(const uint8_t* old_buf, size_t oldsize, const uint8_t* new_buf,
+           size_t newsize, size_t min_length, PatchWriterInterface* patch,
            SuffixArrayIndexInterface** sai_cache) {
 	size_t scsc, scan;
 	uint64_t pos=0;
@@ -112,7 +120,7 @@ int bsdiff(const uint8_t* old_buf, size_t oldsize, const uint8_t* new_buf,
 				oldscore++;
 
 			if(((len==oldscore) && (len!=0)) ||
-				(len>oldscore+8)) break;
+				(len>oldscore+8 && len>=min_length)) break;
 
 			if((scan+lastoffset<oldsize) &&
 				(old_buf[scan+lastoffset] == new_buf[scan]))

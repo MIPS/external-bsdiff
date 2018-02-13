@@ -24,6 +24,7 @@ constexpr char kBsdiff40String[] = "bsdiff40";
 
 const struct option OPTIONS[] = {
     {"format", required_argument, nullptr, 0},
+    {"minlen", required_argument, nullptr, 0},
     {"type", required_argument, nullptr, 0},
     {"quality", required_argument, nullptr, 0},
     {nullptr, 0, nullptr, 0},
@@ -58,9 +59,13 @@ bool BsdiffArguments::ParseCommandLine(int argc, char** argv) {
       return false;
     }
 
-    std::string name = OPTIONS[option_index].name;
+    string name = OPTIONS[option_index].name;
     if (name == "format") {
       if (!ParseBsdiffFormat(optarg, &format_)) {
+        return false;
+      }
+    } else if (name == "minlen") {
+      if (!ParseMinLength(optarg, &min_length_)) {
         return false;
       }
     } else if (name == "type") {
@@ -108,6 +113,24 @@ bool BsdiffArguments::ParseCompressorType(const string& str,
   }
   std::cerr << "Failed to parse compressor type in " << str << endl;
   return false;
+}
+
+bool BsdiffArguments::ParseMinLength(const string& str, size_t* len) {
+  errno = 0;
+  char* end;
+  const char* s = str.c_str();
+  long result = strtol(s, &end, 10);
+  if (errno != 0 || s == end || *end != '\0') {
+    return false;
+  }
+
+  if (result < 0) {
+    std::cerr << "Minimum length must be non-negative: " << str << endl;
+    return false;
+  }
+
+  *len = result;
+  return true;
 }
 
 bool BsdiffArguments::ParseBsdiffFormat(const string& str,
