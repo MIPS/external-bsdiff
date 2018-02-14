@@ -85,8 +85,13 @@ int GenerateBsdiffFromFiles(const char* old_filename,
     return 1;
   }
 
-  return bsdiff::bsdiff(old_buf, oldsize, new_buf, newsize,
-                        arguments.min_length(), patch_writer.get(), nullptr);
+  int ret = bsdiff::bsdiff(old_buf, oldsize, new_buf, newsize,
+                           arguments.min_length(), patch_writer.get(), nullptr);
+
+  munmap(old_buf, oldsize);
+  munmap(new_buf, newsize);
+
+  return ret;
 }
 
 void PrintUsage(const std::string& proc_name) {
