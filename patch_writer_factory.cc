@@ -24,8 +24,17 @@ std::unique_ptr<PatchWriterInterface> CreateBSDF2PatchWriter(
 }
 
 std::unique_ptr<PatchWriterInterface> CreateEndsleyPatchWriter(
+    std::vector<uint8_t>* patch,
+    CompressorType type,
+    int quality) {
+  return std::unique_ptr<PatchWriterInterface>(
+      new EndsleyPatchWriter(patch, type, quality));
+}
+
+std::unique_ptr<PatchWriterInterface> CreateEndsleyPatchWriter(
     std::vector<uint8_t>* patch) {
-  return std::unique_ptr<PatchWriterInterface>(new EndsleyPatchWriter(patch));
+  return std::unique_ptr<PatchWriterInterface>(
+      new EndsleyPatchWriter(patch, CompressorType::kNoCompression, 0));
 }
 
 }  // namespace bsdiff

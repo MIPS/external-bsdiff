@@ -8,6 +8,8 @@
 
 #include <algorithm>
 
+#include "bsdiff/brotli_compressor.h"
+#include "bsdiff/bz2_compressor.h"
 #include "bsdiff/logging.h"
 
 namespace {
@@ -30,12 +32,30 @@ constexpr size_t kMinimumFlushSize = 1024 * 1024;  // 1 MiB
 namespace bsdiff {
 
 bool EndsleyPatchWriter::Init(size_t new_size) {
-  // The patch is uncompressed and it will need exactly:
-  //   new_size + 24 * len(control_entries) + sizeof(header)
-  // We don't know the length of the control entries yet, but we can reserve
-  // enough space to hold at least |new_size|.
-  patch_->clear();
-  patch_->reserve(new_size);
+  switch (compressor_type_) {
+    case CompressorType::kNoCompression:
+      // The patch is uncompressed and it will need exactly:
+      //   new_size + 24 * len(control_entries) + sizeof(header)
+      // We don't know the length of the control entries yet, but we can reserve
+      // enough space to hold at least |new_size|.
+      patch_->clear();
+      patch_->reserve(new_size);
+      break;
+    case CompressorType::kBrotli:
+      compressor_.reset(new BrotliCompressor(quality_));
+      if (!compressor_) {
+        LOG(ERROR) << "Error creating brotli compressor.";
+        return false;
+      }
+      break;
+    case CompressorType::kBZ2:
+      compressor_.reset(new BZ2Compressor());
+      if (!compressor_) {
+        LOG(ERROR) << "Error creating BZ2 compressor.";
+        return false;
+      }
+      break;
+  }
 
   // Header is the magic followed by the new length.
   uint8_t header[24];
@@ -116,6 +136,13 @@ bool EndsleyPatchWriter::Close() {
     LOG(ERROR) << "Pending data to diff/extra not flushed out on Close()";
     return false;
   }
+
+  if (compressor_) {
+    if (!compressor_->Finish())
+      return false;
+    *patch_ = compressor_->GetCompressedData();
+  }
+
   return true;
 }
 
@@ -129,7 +156,11 @@ void EndsleyPatchWriter::EmitControlEntry(const ControlEntry& entry) {
 }
 
 void EndsleyPatchWriter::EmitBuffer(const uint8_t* data, size_t size) {
-  patch_->insert(patch_->end(), data, data + size);
+  if (compressor_) {
+    compressor_->Write(data, size);
+  } else {
+    patch_->insert(patch_->end(), data, data + size);
+  }
 }
 
 void EndsleyPatchWriter::Flush() {

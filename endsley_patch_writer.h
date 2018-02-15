@@ -5,9 +5,12 @@
 #ifndef _BSDIFF_ENDSLEY_PATCH_WRITER_H_
 #define _BSDIFF_ENDSLEY_PATCH_WRITER_H_
 
+#include <memory>
 #include <string>
 #include <vector>
 
+#include "bsdiff/compressor_interface.h"
+#include "bsdiff/constants.h"
 #include "bsdiff/patch_writer_interface.h"
 
 namespace bsdiff {
@@ -35,8 +38,12 @@ class EndsleyPatchWriter : public PatchWriterInterface {
  public:
   // Create the patch writer that will write the data to the passed vector
   // |patch|, resizing it as needed. The |patch| vector must be valid until
-  // Close() is called or this patch is destroyed.
-  explicit EndsleyPatchWriter(std::vector<uint8_t>* patch) : patch_(patch) {}
+  // Close() is called or this patch is destroyed. The data in |patch| will be
+  // compressed using the compressor type |type|.
+  EndsleyPatchWriter(std::vector<uint8_t>* patch,
+                     CompressorType type,
+                     int quality)
+      : patch_(patch), compressor_type_(type), quality_(quality) {}
 
   // PatchWriterInterface overrides.
   bool Init(size_t new_size) override;
@@ -57,6 +64,12 @@ class EndsleyPatchWriter : public PatchWriterInterface {
 
   // The vector we are writing to, owned by the caller.
   std::vector<uint8_t>* patch_;
+
+  // The compressor type to use and its quality (if any).
+  CompressorType compressor_type_;
+  int quality_;
+
+  std::unique_ptr<CompressorInterface> compressor_;
 
   // The pending diff and extra data to be encoded in the file. These vectors
   // would not be used whenever is possible to the data directly to the patch_
