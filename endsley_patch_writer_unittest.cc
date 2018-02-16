@@ -31,7 +31,7 @@ class EndsleyPatchWriterTest : public testing::Test {
   }
 
   std::vector<uint8_t> data_;
-  EndsleyPatchWriter patch_writer_{&data_};
+  EndsleyPatchWriter patch_writer_{&data_, CompressorType::kNoCompression, 0};
 };
 
 // Smoke check that a patch includes the new_size and magic header.
@@ -49,6 +49,34 @@ TEST_F(EndsleyPatchWriterTest, CreateEmptyPatchTest) {
       // 8 zeros for the |new_size| of zero bytes.
       0, 0, 0, 0, 0, 0, 0, 0};
   EXPECT_EQ(empty_patch, data_);
+}
+
+TEST_F(EndsleyPatchWriterTest, CreateCompressedPatchTest) {
+  EndsleyPatchWriter compressed_writer(&data_, CompressorType::kBZ2, 9);
+
+  auto text = VectorFromString("HelloWorld");
+  EXPECT_TRUE(compressed_writer.Init(text.size()));
+
+  EXPECT_TRUE(compressed_writer.AddControlEntry(ControlEntry(5, 5, -2)));
+  EXPECT_TRUE(compressed_writer.WriteDiffStream(text.data(), 5));
+  EXPECT_TRUE(compressed_writer.WriteExtraStream(text.data() + 5, 5));
+
+  // Check that the output patch had no data written to it before Close() is
+  // called, since we are still compressing it.
+  EXPECT_TRUE(data_.empty());
+
+  EXPECT_TRUE(compressed_writer.Close());
+
+  // Check that the whole file is compressed with BZ2 by looking at the header.
+  const auto bz2_header = VectorFromString("BZh9");
+  data_.resize(4);
+  EXPECT_EQ(bz2_header, data_);
+}
+
+TEST_F(EndsleyPatchWriterTest, CreateEmptyBrotliPatchTest) {
+  EndsleyPatchWriter compressed_writer(&data_, CompressorType::kBrotli, 9);
+  EXPECT_TRUE(compressed_writer.Init(0));
+  EXPECT_TRUE(compressed_writer.Close());
 }
 
 // Test we generate the right patch when the control, diff and extra stream come

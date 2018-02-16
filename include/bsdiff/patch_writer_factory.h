@@ -29,12 +29,22 @@ std::unique_ptr<PatchWriterInterface> CreateBSDF2PatchWriter(
     CompressorType type,
     int quality);
 
-// Create a patch writer compatible with Android Play Store bsdiff patches,
-// uncompressed. The data will be written to the passed |patch| vector, which
-// must be valid until Close() is called or this patch is destroyed.
+// Create a patch writer compatible with Android Play Store bsdiff patches.
+// The data will be written to the passed |patch| vector, which must be valid
+// until Close() is called or this patch is destroyed. The data will be
+// compressed using the compressor type |type|. To get an uncompressed patch,
+// pass CompressortType::kNoCompression.
+BSDIFF_EXPORT
+std::unique_ptr<PatchWriterInterface> CreateEndsleyPatchWriter(
+    std::vector<uint8_t>* patch,
+    CompressorType type,
+    int quality);
+
+// Helper function to create an Endsley patch writer with no compression.
 BSDIFF_EXPORT
 std::unique_ptr<PatchWriterInterface> CreateEndsleyPatchWriter(
     std::vector<uint8_t>* patch);
+
 
 }  // namespace bsdiff
 
