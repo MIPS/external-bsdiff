@@ -25,6 +25,7 @@ constexpr char kBrotliString[] = "brotli";
 constexpr char kLegacyString[] = "legacy";
 constexpr char kBsdf2String[] = "bsdf2";
 constexpr char kBsdiff40String[] = "bsdiff40";
+constexpr char kEndsleyString[] = "endsley";
 
 const struct option OPTIONS[] = {
     {"format", required_argument, nullptr, 0},
@@ -41,16 +42,20 @@ const uint32_t kBrotliDefaultQuality = BROTLI_MAX_QUALITY;
 namespace bsdiff {
 
 bool BsdiffArguments::IsValid() const {
+  if (compressor_type_ == CompressorType::kBrotli &&
+      (compression_quality_ < BROTLI_MIN_QUALITY ||
+       compression_quality_ > BROTLI_MAX_QUALITY)) {
+    return false;
+  }
+
   if (format_ == BsdiffFormat::kLegacy) {
-    return (compressor_type_ == CompressorType::kBZ2);
+    return compressor_type_ == CompressorType::kBZ2;
   } else if (format_ == BsdiffFormat::kBsdf2) {
-    if (compressor_type_ == CompressorType::kBZ2) {
-      return true;
-    }
-    if (compressor_type_ == CompressorType::kBrotli) {
-      return (compression_quality_ >= BROTLI_MIN_QUALITY &&
-              compression_quality_ <= BROTLI_MAX_QUALITY);
-    }
+    return (compressor_type_ == CompressorType::kBZ2 ||
+            compressor_type_ == CompressorType::kBrotli);
+  } else if (format_ == BsdiffFormat::kEndsley) {
+    // All compression options are valid for this format.
+    return true;
   }
   return false;
 }
@@ -87,7 +92,7 @@ bool BsdiffArguments::ParseCommandLine(int argc, char** argv) {
   }
 
   // If quality is uninitialized for brotli, set it to default value.
-  if (format_ == BsdiffFormat::kBsdf2 &&
+  if (format_ != BsdiffFormat::kLegacy &&
       compressor_type_ == CompressorType::kBrotli &&
       compression_quality_ == -1) {
     compression_quality_ = kBrotliDefaultQuality;
@@ -147,6 +152,9 @@ bool BsdiffArguments::ParseBsdiffFormat(const string& str,
     return true;
   } else if (format_string == kBsdf2String) {
     *format = BsdiffFormat::kBsdf2;
+    return true;
+  } else if (format_string == kEndsleyString) {
+    *format = BsdiffFormat::kEndsley;
     return true;
   }
   std::cerr << "Failed to parse bsdiff format in " << str << endl;
