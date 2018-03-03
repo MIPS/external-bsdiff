@@ -35,16 +35,16 @@ BsdiffPatchWriter::BsdiffPatchWriter(const std::string& patch_filename)
 
 BsdiffPatchWriter::BsdiffPatchWriter(const std::string& patch_filename,
                                      CompressorType type,
-                                     int quality)
+                                     int brotli_quality)
     : patch_filename_(patch_filename), format_(BsdiffFormat::kBsdf2) {
   if (type == CompressorType::kBZ2) {
     ctrl_stream_.reset(new BZ2Compressor());
     diff_stream_.reset(new BZ2Compressor());
     extra_stream_.reset(new BZ2Compressor());
   } else if (type == CompressorType::kBrotli) {
-    ctrl_stream_.reset(new BrotliCompressor(quality));
-    diff_stream_.reset(new BrotliCompressor(quality));
-    extra_stream_.reset(new BrotliCompressor(quality));
+    ctrl_stream_.reset(new BrotliCompressor(brotli_quality));
+    diff_stream_.reset(new BrotliCompressor(brotli_quality));
+    extra_stream_.reset(new BrotliCompressor(brotli_quality));
   }
 }
 

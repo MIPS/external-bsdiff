@@ -31,7 +31,7 @@ const struct option OPTIONS[] = {
     {"format", required_argument, nullptr, 0},
     {"minlen", required_argument, nullptr, 0},
     {"type", required_argument, nullptr, 0},
-    {"quality", required_argument, nullptr, 0},
+    {"brotli_quality", required_argument, nullptr, 0},
     {nullptr, 0, nullptr, 0},
 };
 
@@ -43,8 +43,8 @@ namespace bsdiff {
 
 bool BsdiffArguments::IsValid() const {
   if (compressor_type_ == CompressorType::kBrotli &&
-      (compression_quality_ < BROTLI_MIN_QUALITY ||
-       compression_quality_ > BROTLI_MAX_QUALITY)) {
+      (brotli_quality_ < BROTLI_MIN_QUALITY ||
+       brotli_quality_ > BROTLI_MAX_QUALITY)) {
     return false;
   }
 
@@ -81,8 +81,9 @@ bool BsdiffArguments::ParseCommandLine(int argc, char** argv) {
       if (!ParseCompressorType(optarg, &compressor_type_)) {
         return false;
       }
-    } else if (name == "quality") {
-      if (!ParseQuality(optarg, &compression_quality_)) {
+    } else if (name == "brotli_quality") {
+      if (!ParseQuality(optarg, &brotli_quality_, BROTLI_MIN_QUALITY,
+                        BROTLI_MAX_QUALITY)) {
         return false;
       }
     } else {
@@ -93,13 +94,12 @@ bool BsdiffArguments::ParseCommandLine(int argc, char** argv) {
 
   // If quality is uninitialized for brotli, set it to default value.
   if (format_ != BsdiffFormat::kLegacy &&
-      compressor_type_ == CompressorType::kBrotli &&
-      compression_quality_ == -1) {
-    compression_quality_ = kBrotliDefaultQuality;
+      compressor_type_ == CompressorType::kBrotli && brotli_quality_ == -1) {
+    brotli_quality_ = kBrotliDefaultQuality;
   } else if (compressor_type_ != CompressorType::kBrotli &&
-             compression_quality_ != -1) {
-    std::cerr << "Warning: Compression quality is only used in the brotli"
-                 " compressor." << endl;
+             brotli_quality_ != -1) {
+    std::cerr << "Warning: Brotli quality is only used in the brotli"
+                 " compressor.\n";
   }
 
   return true;
@@ -161,7 +161,10 @@ bool BsdiffArguments::ParseBsdiffFormat(const string& str,
   return false;
 }
 
-bool BsdiffArguments::ParseQuality(const string& str, int* quality) {
+bool BsdiffArguments::ParseQuality(const string& str,
+                                   int* quality,
+                                   int min,
+                                   int max) {
   errno = 0;
   char* end;
   const char* s = str.c_str();
@@ -170,7 +173,7 @@ bool BsdiffArguments::ParseQuality(const string& str, int* quality) {
     return false;
   }
 
-  if (result < BROTLI_MIN_QUALITY || result > BROTLI_MAX_QUALITY) {
+  if (result < min || result > max) {
     std::cerr << "Compression quality out of range " << str << endl;
     return false;
   }
