@@ -40,13 +40,13 @@ TEST(BsdiffArgumentsTest, ParseBsdiffFormatTest) {
 
 TEST(BsdiffArgumentsTest, ParseQualityTest) {
   int quality;
-  EXPECT_TRUE(BsdiffArguments::ParseQuality("9", &quality));
+  EXPECT_TRUE(BsdiffArguments::ParseQuality("9", &quality, 0, 11));
   EXPECT_EQ(9, quality);
 
   // Check the out of range quality values.
-  EXPECT_FALSE(BsdiffArguments::ParseQuality("30", &quality));
-  EXPECT_FALSE(BsdiffArguments::ParseQuality("1234567890", &quality));
-  EXPECT_FALSE(BsdiffArguments::ParseQuality("aabb", &quality));
+  EXPECT_FALSE(BsdiffArguments::ParseQuality("30", &quality, 0, 11));
+  EXPECT_FALSE(BsdiffArguments::ParseQuality("1234567890", &quality, 0, 1000));
+  EXPECT_FALSE(BsdiffArguments::ParseQuality("aabb", &quality, 0, 1000));
 }
 
 TEST(BsdiffArgumentsTest, ParseMinLengthTest) {
@@ -80,7 +80,7 @@ TEST(BsdiffArgumentsTest, ArgumentsValidTest) {
 
 TEST(BsdiffArgumentsTest, ParseArgumentsSmokeTest) {
   std::vector<const char*> args = {"bsdiff", "--format=bsdf2", "--type=brotli",
-                                   "--quality=9", "--minlen=12"};
+                                   "--brotli_quality=9", "--minlen=12"};
 
   BsdiffArguments arguments;
   EXPECT_TRUE(
@@ -88,7 +88,7 @@ TEST(BsdiffArgumentsTest, ParseArgumentsSmokeTest) {
 
   EXPECT_EQ(BsdiffFormat::kBsdf2, arguments.format());
   EXPECT_EQ(CompressorType::kBrotli, arguments.compressor_type());
-  EXPECT_EQ(9, arguments.compression_quality());
+  EXPECT_EQ(9, arguments.brotli_quality());
   EXPECT_EQ(12, arguments.min_length());
 }
 

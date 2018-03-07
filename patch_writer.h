@@ -23,11 +23,11 @@ class BsdiffPatchWriter : public PatchWriterInterface {
   explicit BsdiffPatchWriter(const std::string& patch_filename);
 
   // Create the patch writer using the "BSDF2" format. It uses the compressor
-  // with algorithm |type| and quality |quality|. This writer also writes the
-  // patch data to the file |patch_filename|.
+  // with algorithm |type|; and quality |brotli_quality| if it's brotli. This
+  // writer also writes the patch data to the file |patch_filename|.
   BsdiffPatchWriter(const std::string& patch_filename,
                     CompressorType type,
-                    int quality);
+                    int brotli_quality);
 
   // PatchWriterInterface overrides.
   bool Init(size_t new_size) override;
