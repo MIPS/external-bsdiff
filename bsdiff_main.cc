@@ -80,11 +80,11 @@ int GenerateBsdiffFromFiles(const char* old_filename,
     patch_writer = bsdiff::CreateBsdiffPatchWriter(patch_filename);
   } else if (arguments.format() == bsdiff::BsdiffFormat::kBsdf2) {
     patch_writer = bsdiff::CreateBSDF2PatchWriter(patch_filename,
-                                                  arguments.compressor_type(),
+                                                  arguments.compressor_types(),
                                                   arguments.brotli_quality());
   } else if (arguments.format() == bsdiff::BsdiffFormat::kEndsley) {
     patch_writer = bsdiff::CreateEndsleyPatchWriter(
-        &raw_data, arguments.compressor_type(), arguments.brotli_quality());
+        &raw_data, arguments.compressor_types()[0], arguments.brotli_quality());
   } else {
     std::cerr << "unexpected bsdiff format." << std::endl;
     return 1;
@@ -120,7 +120,8 @@ void PrintUsage(const std::string& proc_name) {
             << "  --minlen LEN                       The minimum match length "
                "required to consider a match in the algorithm.\n"
             << "  --type <bz2|brotli|nocompression>  The algorithm to compress "
-               "the patch, bsdf2 format only.\n"
+               "the patch, bsdf2 format only. Multiple supported compressors "
+               "should be split by ':', e.g. bz2:brotli.\n"
             << "  --brotli_quality                   Quality of the brotli "
                "compressor.\n";
 }

@@ -30,30 +30,38 @@ namespace bsdiff {
 BsdiffPatchWriter::BsdiffPatchWriter(const std::string& patch_filename)
     : patch_filename_(patch_filename),
       format_(BsdiffFormat::kLegacy),
-      type_(CompressorType::kBZ2),
-      brotli_quality_(-1) {}
+      brotli_quality_(-1) {
+  types_.emplace_back(CompressorType::kBZ2);
+}
 
 
 BsdiffPatchWriter::BsdiffPatchWriter(const std::string& patch_filename,
-                                     CompressorType type,
+                                     const std::vector<CompressorType>& types,
                                      int brotli_quality)
     : patch_filename_(patch_filename),
       format_(BsdiffFormat::kBsdf2),
-      type_(type),
+      types_(types),
       brotli_quality_(brotli_quality) {}
 
 bool BsdiffPatchWriter::InitializeCompressorList(
     std::vector<std::unique_ptr<bsdiff::CompressorInterface>>*
         compressor_list) {
-  switch (type_) {
-    case CompressorType::kBZ2:
-      compressor_list->emplace_back(new BZ2Compressor());
-      break;
-    case CompressorType::kBrotli:
-      compressor_list->emplace_back(new BrotliCompressor(brotli_quality_));
-      break;
-    case CompressorType::kNoCompression:
-      LOG(ERROR) << "Unsupported compression type " << static_cast<int>(type_);
+  if (types_.empty()) {
+    LOG(ERROR) << "Patch writer expects at least one compressor.";
+    return false;
+  }
+
+  for (const auto& type : types_) {
+    switch (type) {
+      case CompressorType::kBZ2:
+        compressor_list->emplace_back(new BZ2Compressor());
+        break;
+      case CompressorType::kBrotli:
+        compressor_list->emplace_back(new BrotliCompressor(brotli_quality_));
+        break;
+      case CompressorType::kNoCompression:
+        LOG(ERROR) << "Unsupported compression type " << static_cast<int>(type);
+    }
   }
 
   for (const auto& compressor : *compressor_list) {

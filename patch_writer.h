@@ -26,7 +26,7 @@ class BsdiffPatchWriter : public PatchWriterInterface {
   // with algorithm |type|; and quality |brotli_quality| if it's brotli. This
   // writer also writes the patch data to the file |patch_filename|.
   BsdiffPatchWriter(const std::string& patch_filename,
-                    CompressorType type,
+                    const std::vector<CompressorType>& types,
                     int brotli_quality);
 
   // PatchWriterInterface overrides.
@@ -67,9 +67,8 @@ class BsdiffPatchWriter : public PatchWriterInterface {
   // The format of bsdiff we're using.
   BsdiffFormat format_;
 
-  // The compressor we're using, or kSmallest in which case we try all
-  // compressors and pick the one with best compression ratio.
-  CompressorType type_;
+  // The compressors we're using.
+  std::vector<CompressorType> types_;
 
   // The compression quality of the brotli compressor.
   int brotli_quality_;

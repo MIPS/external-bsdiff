@@ -19,8 +19,16 @@ std::unique_ptr<PatchWriterInterface> CreateBSDF2PatchWriter(
     const std::string& patch_filename,
     CompressorType type,
     int brotli_quality) {
+  return CreateBSDF2PatchWriter(
+      patch_filename, std::vector<CompressorType>{type}, brotli_quality);
+}
+
+std::unique_ptr<PatchWriterInterface> CreateBSDF2PatchWriter(
+    const std::string& patch_filename,
+    const std::vector<CompressorType>& types,
+    int brotli_quality) {
   return std::unique_ptr<PatchWriterInterface>(
-      new BsdiffPatchWriter(patch_filename, type, brotli_quality));
+      new BsdiffPatchWriter(patch_filename, types, brotli_quality));
 }
 
 std::unique_ptr<PatchWriterInterface> CreateEndsleyPatchWriter(
