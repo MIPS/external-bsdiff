@@ -51,6 +51,7 @@ bool BZ2Decompressor::Read(uint8_t* output_data, size_t bytes_to_output) {
         std::numeric_limits<unsigned int>::max(), bytes_to_output);
     stream_.avail_out = output_size;
 
+    size_t prev_avail_in = stream_.avail_in;
     int bz2err = BZ2_bzDecompress(&stream_);
     if (bz2err != BZ_OK && bz2err != BZ_STREAM_END) {
       LOG(ERROR) << "Failed to decompress " << output_size
@@ -58,6 +59,12 @@ bool BZ2Decompressor::Read(uint8_t* output_data, size_t bytes_to_output) {
       return false;
     }
     bytes_to_output -= (output_size - stream_.avail_out);
+    if (bytes_to_output && prev_avail_in == stream_.avail_in &&
+        output_size == stream_.avail_out) {
+      LOG(ERROR) << "BZ2Decompressor made no progress, pending "
+                 << bytes_to_output << " bytes to decompress";
+      return false;
+    }
   }
   return true;
 }
