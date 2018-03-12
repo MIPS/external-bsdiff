@@ -13,6 +13,12 @@
 
 namespace bsdiff {
 
+BZ2Decompressor::~BZ2Decompressor() {
+  // Release the memory on destruction if needed.
+  if (stream_initialized_)
+    BZ2_bzDecompressEnd(&stream_);
+}
+
 bool BZ2Decompressor::SetInputData(const uint8_t* input_data, size_t size) {
   // TODO(xunchang) update the avail_in for size > 2GB.
   if (size > std::numeric_limits<unsigned int>::max()) {
@@ -30,10 +36,15 @@ bool BZ2Decompressor::SetInputData(const uint8_t* input_data, size_t size) {
     LOG(ERROR) << "Failed to bzinit control stream: " << bz2err;
     return false;
   }
+  stream_initialized_ = true;
   return true;
 }
 
 bool BZ2Decompressor::Read(uint8_t* output_data, size_t bytes_to_output) {
+  if (!stream_initialized_) {
+    LOG(ERROR) << "BZ2Decompressor not initialized";
+    return false;
+  }
   stream_.next_out = reinterpret_cast<char*>(output_data);
   while (bytes_to_output > 0) {
     size_t output_size = std::min<size_t>(
@@ -52,11 +63,16 @@ bool BZ2Decompressor::Read(uint8_t* output_data, size_t bytes_to_output) {
 }
 
 bool BZ2Decompressor::Close() {
+  if (!stream_initialized_) {
+    LOG(ERROR) << "BZ2Decompressor not initialized";
+    return false;
+  }
   int bz2err = BZ2_bzDecompressEnd(&stream_);
   if (bz2err != BZ_OK) {
     LOG(ERROR) << "BZ2_bzDecompressEnd returns with " << bz2err;
     return false;
   }
+  stream_initialized_ = false;
   return true;
 }
 
