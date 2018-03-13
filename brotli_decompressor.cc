@@ -8,6 +8,11 @@
 
 namespace bsdiff {
 
+BrotliDecompressor::~BrotliDecompressor() {
+  if (brotli_decoder_state_)
+    BrotliDecoderDestroyInstance(brotli_decoder_state_);
+}
+
 bool BrotliDecompressor::SetInputData(const uint8_t* input_data, size_t size) {
   brotli_decoder_state_ =
       BrotliDecoderCreateInstance(nullptr, nullptr, nullptr);
@@ -21,6 +26,10 @@ bool BrotliDecompressor::SetInputData(const uint8_t* input_data, size_t size) {
 }
 
 bool BrotliDecompressor::Read(uint8_t* output_data, size_t bytes_to_output) {
+  if (!brotli_decoder_state_) {
+    LOG(ERROR) << "BrotliDecompressor not initialized";
+    return false;
+  }
   auto next_out = output_data;
   size_t available_out = bytes_to_output;
 
@@ -45,6 +54,10 @@ bool BrotliDecompressor::Read(uint8_t* output_data, size_t bytes_to_output) {
 }
 
 bool BrotliDecompressor::Close() {
+  if (!brotli_decoder_state_) {
+    LOG(ERROR) << "BrotliDecompressor not initialized";
+    return false;
+  }
   // In some cases, the brotli compressed stream could be empty. As a result,
   // the function BrotliDecoderIsFinished() will return false because we never
   // start the decompression. When that happens, we just destroy the decoder
@@ -56,6 +69,7 @@ bool BrotliDecompressor::Close() {
   }
 
   BrotliDecoderDestroyInstance(brotli_decoder_state_);
+  brotli_decoder_state_ = nullptr;
   return true;
 }
 
