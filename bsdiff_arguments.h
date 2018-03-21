@@ -7,7 +7,9 @@
 
 #include <stdint.h>
 
+#include <set>
 #include <string>
+#include <vector>
 
 #include "bsdiff/constants.h"
 #include "bsdiff/patch_writer_interface.h"
@@ -18,14 +20,15 @@ namespace bsdiff {
 // brotli_quality.
 class BsdiffArguments {
  public:
-  BsdiffArguments()
-      : format_(BsdiffFormat::kLegacy),
-        compressor_type_(CompressorType::kBZ2),
-        brotli_quality_(-1) {}
+  BsdiffArguments() : format_(BsdiffFormat::kLegacy), brotli_quality_(-1) {
+    compressor_types_.emplace(CompressorType::kBZ2);
+  }
 
-  BsdiffArguments(BsdiffFormat format, CompressorType type, int brotli_quality)
+  BsdiffArguments(BsdiffFormat format,
+                  std::set<CompressorType> types,
+                  int brotli_quality)
       : format_(format),
-        compressor_type_(type),
+        compressor_types_(std::move(types)),
         brotli_quality_(brotli_quality) {}
 
   // Check if the compressor type is compatible with the bsdiff format.
@@ -36,7 +39,7 @@ class BsdiffArguments {
 
   int min_length() const { return min_length_; }
 
-  CompressorType compressor_type() const { return compressor_type_; }
+  std::vector<CompressorType> compressor_types() const;
 
   int brotli_quality() const { return brotli_quality_; }
 
@@ -45,7 +48,8 @@ class BsdiffArguments {
   bool ParseCommandLine(int argc, char** argv);
 
   // Parse the compression type from string.
-  static bool ParseCompressorType(const std::string& str, CompressorType* type);
+  static bool ParseCompressorTypes(const std::string& str,
+                                   std::set<CompressorType>* types);
 
   // Parse the minimum length parameter from string.
   static bool ParseMinLength(const std::string& str, size_t* len);
@@ -61,11 +65,13 @@ class BsdiffArguments {
                            int max);
 
  private:
+  bool IsCompressorSupported(CompressorType type) const;
+
   // Current format supported are the legacy "BSDIFF40" or "BSDF2".
   BsdiffFormat format_;
 
-  // The algorithm to compress the patch, i.e. BZ2 or Brotli.
-  CompressorType compressor_type_;
+  // The algorithms to compress the patch, e.g. bz2, brotli.
+  std::set<CompressorType> compressor_types_;
 
   // The quality of brotli compressor.
   int brotli_quality_;
