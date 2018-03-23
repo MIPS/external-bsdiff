@@ -48,6 +48,18 @@ bool BrotliDecompressor::Read(uint8_t* output_data, size_t bytes_to_output) {
     } else if (result == BROTLI_DECODER_RESULT_NEEDS_MORE_INPUT) {
       LOG(ERROR) << "Decompressor reached EOF while reading from input stream.";
       return false;
+    } else if (result == BROTLI_DECODER_RESULT_SUCCESS) {
+      // This means that decoding is finished, no more input might be consumed
+      // and no more output will be produced. In the normal case, when there is
+      // more data available than what was requested in this Read() call it
+      // returns BROTLI_DECODER_RESULT_NEEDS_MORE_OUTPUT.
+      if (available_out > 0) {
+        LOG(ERROR) << "Expected to read " << available_out
+                   << " more bytes but reached the end of compressed brotli "
+                      "stream";
+        return false;
+      }
+      return true;
     }
   }
   return true;
