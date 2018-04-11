@@ -170,5 +170,21 @@
         },
       ],
     }],
+    # fuzzer target
+    ['USE_fuzzer == 1', {
+      'targets': [
+        {
+          'target_name': 'bspatch_fuzzer',
+          'type': 'executable',
+          'dependencies': [
+            'libbspatch-static',
+          ],
+          'includes': ['../../platform2/common-mk/common_fuzzer.gypi'],
+          'sources': [
+            'bspatch_fuzzer.cc',
+          ],
+        },
+      ],
+    }],
   ],
 }
